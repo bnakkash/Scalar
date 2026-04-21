@@ -1,0 +1,316 @@
+(function () {
+  'use strict';
+
+  const CATEGORIES = window.CATEGORIES;
+
+  const STORAGE_KEY = 'scalar_state_v1';
+
+  const state = {
+    category: 'pressure',
+    fromUnit: 'psi',
+    toUnit: 'bar',
+    fromValue: '1',
+    precision: 6,
+    perCategory: {},
+  };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) Object.assign(state, JSON.parse(raw));
+    } catch (_) {}
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (_) {}
+  }
+
+  const el = {
+    categories: document.getElementById('categories'),
+    fromUnit: document.getElementById('fromUnit'),
+    toUnit: document.getElementById('toUnit'),
+    fromSym: document.getElementById('fromSym'),
+    toSym: document.getElementById('toSym'),
+    fromName: document.getElementById('fromName'),
+    toName: document.getElementById('toName'),
+    fromValue: document.getElementById('fromValue'),
+    toValue: document.getElementById('toValue'),
+    fromCard: document.getElementById('fromCard'),
+    toCard: document.getElementById('toCard'),
+    swapBtn: document.getElementById('swapBtn'),
+    relation: document.getElementById('relation'),
+    toast: document.getElementById('toast'),
+  };
+
+  function renderCategories() {
+    el.categories.innerHTML = '';
+    Object.entries(CATEGORIES).forEach(([key, cat]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cat-pill' + (key === state.category ? ' active' : '');
+      const glyph = cat.glyph || '•';
+      b.innerHTML = `<span class="glyph">${glyph}</span><span class="lbl">${cat.label}</span>`;
+      b.addEventListener('click', () => selectCategory(key));
+      el.categories.appendChild(b);
+    });
+  }
+
+  function renderUnits() {
+    const cat = CATEGORIES[state.category];
+    const units = cat.units;
+    [el.fromUnit, el.toUnit].forEach(sel => {
+      sel.innerHTML = '';
+      Object.entries(units).forEach(([key, u]) => {
+        const o = document.createElement('option');
+        o.value = key;
+        o.textContent = `${u.sym} — ${u.name}`;
+        sel.appendChild(o);
+      });
+    });
+
+    const remembered = state.perCategory[state.category];
+    if (remembered && units[remembered.from] && units[remembered.to]) {
+      state.fromUnit = remembered.from;
+      state.toUnit = remembered.to;
+    } else {
+      const d = cat.default || Object.keys(units).slice(0, 2);
+      state.fromUnit = units[d[0]] ? d[0] : Object.keys(units)[0];
+      state.toUnit = units[d[1]] ? d[1] : Object.keys(units)[1] || state.fromUnit;
+    }
+
+    el.fromUnit.value = state.fromUnit;
+    el.toUnit.value = state.toUnit;
+    updateLabels();
+  }
+
+  function updateLabels() {
+    const cat = CATEGORIES[state.category];
+    const fu = cat.units[state.fromUnit];
+    const tu = cat.units[state.toUnit];
+    el.fromSym.textContent = fu.sym;
+    el.toSym.textContent = tu.sym;
+    el.fromName.textContent = fu.name;
+    el.toName.textContent = tu.name;
+  }
+
+  function convert(value, fromKey, toKey) {
+    const cat = CATEGORIES[state.category];
+    if (cat.convert) return cat.convert(value, fromKey, toKey);
+    const fromF = cat.units[fromKey].f;
+    const toF   = cat.units[toKey].f;
+    return value * fromF / toF;
+  }
+
+  function formatNum(n, prec) {
+    if (!isFinite(n)) return '—';
+    if (n === 0) return '0';
+    const abs = Math.abs(n);
+    let s;
+    if (abs >= 1e8 || abs < 1e-4) {
+      s = n.toExponential(prec - 1);
+      return s.replace('e+', 'e').replace(/e(-?)0*(\d)/, 'e$1$2');
+    }
+    s = n.toPrecision(prec);
+    if (s.includes('.') && !s.includes('e')) {
+      s = s.replace(/0+$/, '').replace(/\.$/, '');
+    }
+    if (!s.includes('e')) {
+      const parts = s.split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      s = parts.join('.');
+    }
+    return s;
+  }
+
+  // Shrink font-size until content fits the element's content box.
+  function fitText(node, baseSize, minSize) {
+    const base = baseSize || 36;
+    const min = minSize || 16;
+    node.style.fontSize = base + 'px';
+    const max = node.clientWidth;
+    if (max <= 0) return;
+    let size = base;
+    while (node.scrollWidth > max && size > min) {
+      size -= 1;
+      node.style.fontSize = size + 'px';
+    }
+  }
+
+  function baseValueFontSize() {
+    return window.innerWidth <= 360 ? 30 : 36;
+  }
+
+  function recompute(animate = true) {
+    const raw = el.fromValue.value.trim().replace(/,/g, '');
+    if (raw === '' || raw === '-' || raw === '.') {
+      el.toValue.textContent = '—';
+      el.relation.textContent = '—';
+      fitText(el.toValue, baseValueFontSize());
+      return;
+    }
+    const v = parseFloat(raw);
+    if (!isFinite(v)) {
+      el.toValue.textContent = '—';
+      el.relation.textContent = '—';
+      fitText(el.toValue, baseValueFontSize());
+      return;
+    }
+    const out = convert(v, state.fromUnit, state.toUnit);
+    el.toValue.textContent = formatNum(out, state.precision);
+
+    const oneOut = convert(1, state.fromUnit, state.toUnit);
+    const cat = CATEGORIES[state.category];
+    const fu = cat.units[state.fromUnit];
+    const tu = cat.units[state.toUnit];
+    el.relation.innerHTML =
+      `1 ${fu.sym} <span class="eq">=</span> ${formatNum(oneOut, 6)} ${tu.sym}`;
+
+    fitText(el.toValue, baseValueFontSize());
+    fitText(el.fromValue, baseValueFontSize());
+
+    if (animate) {
+      el.toValue.classList.remove('updating');
+      void el.toValue.offsetWidth;
+      el.toValue.classList.add('updating');
+    }
+  }
+
+  function selectCategory(key) {
+    if (key === state.category) return;
+    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
+    state.category = key;
+    renderCategories();
+    renderUnits();
+    recompute();
+    saveState();
+    haptic(8);
+  }
+
+  el.fromUnit.addEventListener('change', (e) => {
+    state.fromUnit = e.target.value;
+    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
+    updateLabels();
+    recompute();
+    saveState();
+  });
+
+  el.toUnit.addEventListener('change', (e) => {
+    state.toUnit = e.target.value;
+    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
+    updateLabels();
+    recompute();
+    saveState();
+  });
+
+  el.fromValue.addEventListener('input', (e) => {
+    let v = e.target.value;
+    v = v.replace(/\s/g, '');
+    if (v !== e.target.value) e.target.value = v;
+    state.fromValue = v;
+    recompute();
+    saveState();
+  });
+
+  el.fromValue.addEventListener('focus', () => {
+    el.fromCard.classList.add('focused');
+    setTimeout(() => el.fromValue.select(), 20);
+  });
+
+  el.fromValue.addEventListener('blur', () => {
+    el.fromCard.classList.remove('focused');
+  });
+
+  el.swapBtn.addEventListener('click', () => {
+    const currentOut = el.toValue.textContent.replace(/,/g, '');
+    const parsedOut = parseFloat(currentOut);
+
+    const oldFrom = state.fromUnit;
+    state.fromUnit = state.toUnit;
+    state.toUnit = oldFrom;
+    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
+
+    el.fromUnit.value = state.fromUnit;
+    el.toUnit.value = state.toUnit;
+    updateLabels();
+
+    if (isFinite(parsedOut)) {
+      el.fromValue.value = formatNum(parsedOut, state.precision).replace(/,/g, '');
+      state.fromValue = el.fromValue.value;
+    }
+    recompute();
+    saveState();
+    haptic(10);
+  });
+
+  document.querySelectorAll('.precision-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.precision-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.precision = parseInt(btn.dataset.prec, 10);
+      recompute(false);
+      saveState();
+    });
+  });
+
+  el.toValue.addEventListener('click', async () => {
+    const t = el.toValue.textContent;
+    if (t === '—') return;
+    const plain = t.replace(/,/g, '');
+    try {
+      await navigator.clipboard.writeText(plain);
+      toast('copied ' + plain);
+      haptic(12);
+    } catch (_) {
+      const r = document.createRange();
+      r.selectNode(el.toValue);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(r);
+      try {
+        document.execCommand('copy');
+        toast('copied');
+      } catch (_) {}
+      window.getSelection().removeAllRanges();
+    }
+  });
+
+  function toast(msg) {
+    el.toast.textContent = msg;
+    el.toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.toast.classList.remove('show'), 1400);
+  }
+
+  function haptic(ms) {
+    if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (_) {} }
+  }
+
+  let lastTap = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTap < 300 && e.target.tagName !== 'INPUT') {
+      e.preventDefault();
+    }
+    lastTap = now;
+  }, { passive: false });
+
+  window.addEventListener('resize', () => {
+    fitText(el.toValue, baseValueFontSize());
+    fitText(el.fromValue, baseValueFontSize());
+  });
+
+  function init() {
+    loadState();
+    if (!CATEGORIES[state.category]) state.category = 'pressure';
+    document.querySelectorAll('.precision-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.prec, 10) === state.precision);
+    });
+    renderCategories();
+    renderUnits();
+    el.fromValue.value = state.fromValue || '1';
+    recompute(false);
+  }
+
+  init();
+})();
