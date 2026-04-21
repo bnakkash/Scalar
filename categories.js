@@ -69,8 +69,31 @@ window.CATEGORIES = {
       'cfm':   { name: 'Cubic foot per minute',  sym: 'cfm',   f: 0.0283168466/60 },
       'cfh':   { name: 'Cubic foot per hour',    sym: 'cfh',   f: 0.0283168466/3600 },
       'cfs':   { name: 'Cubic foot per second',  sym: 'cfs',   f: 0.0283168466 },
+      'scfm':  { name: 'Std. cubic foot per minute', sym: 'scfm', f: 0.0283168466/60 },
+      'scfh':  { name: 'Std. cubic foot per hour',   sym: 'scfh', f: 0.0283168466/3600 },
       'bbld':  { name: 'Barrel per day (oil)',   sym: 'bbl/d', f: 0.158987294928/86400 },
       'bblh':  { name: 'Barrel per hour (oil)',  sym: 'bbl/h', f: 0.158987294928/3600 },
+    }
+  },
+
+  massFlow: {
+    label: 'Mass Flow',
+    glyph: 'ṁ',
+    base: 'kg/s',
+    default: ['lbhr', 'kgmin'],
+    units: {
+      kgs:   { name: 'Kilogram per second', sym: 'kg/s',   f: 1 },
+      kgmin: { name: 'Kilogram per minute', sym: 'kg/min', f: 1/60 },
+      kghr:  { name: 'Kilogram per hour',   sym: 'kg/h',   f: 1/3600 },
+      gs:    { name: 'Gram per second',     sym: 'g/s',    f: 1e-3 },
+      gmin:  { name: 'Gram per minute',     sym: 'g/min',  f: 1e-3/60 },
+      tonhr: { name: 'Metric ton per hour', sym: 't/h',    f: 1000/3600 },
+      tonday:{ name: 'Metric ton per day',  sym: 't/day',  f: 1000/86400 },
+      lbs:   { name: 'Pound per second',    sym: 'lb/s',   f: 0.45359237 },
+      lbmin: { name: 'Pound per minute',    sym: 'lb/min', f: 0.45359237/60 },
+      lbhr:  { name: 'Pound per hour',      sym: 'lb/hr',  f: 0.45359237/3600 },
+      ozs:   { name: 'Ounce per second',    sym: 'oz/s',   f: 0.028349523125 },
+      ozmin: { name: 'Ounce per minute',    sym: 'oz/min', f: 0.028349523125/60 },
     }
   },
 
