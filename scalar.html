@@ -188,49 +188,50 @@
     color: var(--accent);
   }
 
-  /* ============ CATEGORY PILLS ============ */
+  /* ============ CATEGORY GRID ============ */
   .categories {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 2px 4px 12px;
-    margin: 0 -22px 20px;
-    padding-left: calc(var(--safe-left) + 22px);
-    padding-right: calc(var(--safe-right) + 22px);
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    mask-image: linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
+    padding: 2px 0 4px;
+    margin: 0 0 20px;
   }
 
-  .categories::-webkit-scrollbar { display: none; }
-
   .cat-pill {
-    flex-shrink: 0;
     background: var(--surface);
     border: 1px solid var(--line);
     color: var(--text-dim);
     font-family: var(--ui);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 9px 15px;
-    border-radius: 999px;
+    letter-spacing: 0.02em;
+    padding: 10px 6px 9px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.18s ease;
-    white-space: nowrap;
-    text-transform: capitalize;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 7px;
+    justify-content: center;
+    gap: 4px;
+    min-height: 58px;
+    text-align: center;
+    line-height: 1.15;
   }
 
-  .cat-pill .dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: all 0.18s ease;
+  .cat-pill .glyph {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    opacity: 0.85;
+    transition: color 0.15s ease, opacity 0.15s ease;
+    line-height: 1;
+  }
+
+  .cat-pill .lbl {
+    font-size: 11px;
+    color: inherit;
   }
 
   .cat-pill.active {
@@ -239,14 +240,23 @@
     color: #1a1408;
   }
 
-  .cat-pill.active .dot {
-    background: #1a1408;
-    box-shadow: 0 0 0 3px rgba(26, 20, 8, 0.15);
+  .cat-pill.active .glyph {
+    color: #1a1408;
+    opacity: 1;
   }
 
   .cat-pill:active:not(.active) {
     background: var(--surface-2);
-    border-color: var(--line);
+  }
+
+  @media (min-width: 460px) {
+    .categories { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  @media (max-width: 330px) {
+    .cat-pill { min-height: 54px; }
+    .cat-pill .glyph { font-size: 14px; }
+    .cat-pill .lbl { font-size: 10px; }
   }
 
   /* ============ CONVERSION CARDS ============ */
@@ -605,6 +615,7 @@
   const CATEGORIES = {
     pressure: {
       label: 'Pressure',
+      glyph: 'P',
       base: 'Pa',
       default: ['psi', 'bar'],
       units: {
@@ -628,6 +639,7 @@
 
     temperature: {
       label: 'Temperature',
+      glyph: 'T',
       default: ['C', 'F'],
       units: {
         C: { name: 'Celsius',    sym: '°C' },
@@ -655,6 +667,7 @@
 
     flow: {
       label: 'Flow Rate',
+      glyph: 'Q',
       base: 'm³/s',
       default: ['gpm', 'Lpm'],
       units: {
@@ -677,6 +690,7 @@
 
     length: {
       label: 'Length',
+      glyph: 'L',
       base: 'm',
       default: ['in', 'mm'],
       units: {
@@ -697,6 +711,7 @@
 
     mass: {
       label: 'Mass',
+      glyph: 'm',
       base: 'kg',
       default: ['lb', 'kg'],
       units: {
@@ -715,6 +730,7 @@
 
     volume: {
       label: 'Volume',
+      glyph: 'V',
       base: 'm³',
       default: ['gal', 'L'],
       units: {
@@ -736,6 +752,7 @@
 
     power: {
       label: 'Power',
+      glyph: 'W',
       base: 'W',
       default: ['HP', 'kW'],
       units: {
@@ -755,6 +772,7 @@
 
     energy: {
       label: 'Energy',
+      glyph: 'E',
       base: 'J',
       default: ['kWh', 'BTU'],
       units: {
@@ -776,6 +794,7 @@
 
     force: {
       label: 'Force',
+      glyph: 'F',
       base: 'N',
       default: ['lbf', 'N'],
       units: {
@@ -793,6 +812,7 @@
 
     speed: {
       label: 'Speed',
+      glyph: 'v',
       base: 'm/s',
       default: ['mph', 'ft/s'],
       units: {
@@ -808,6 +828,7 @@
 
     area: {
       label: 'Area',
+      glyph: 'A',
       base: 'm²',
       default: ['ft²', 'm²'],
       units: {
@@ -826,6 +847,7 @@
 
     torque: {
       label: 'Torque',
+      glyph: 'τ',
       base: 'N·m',
       default: ['lbf·ft', 'N·m'],
       units: {
@@ -841,6 +863,7 @@
 
     density: {
       label: 'Density',
+      glyph: 'ρ',
       base: 'kg/m³',
       default: ['lb/ft³', 'kg/m³'],
       units: {
@@ -857,6 +880,7 @@
 
     angle: {
       label: 'Angle',
+      glyph: 'θ',
       base: 'rad',
       default: ['deg', 'rad'],
       units: {
@@ -872,6 +896,7 @@
 
     time: {
       label: 'Time',
+      glyph: 't',
       base: 's',
       default: ['min', 's'],
       units: {
@@ -888,6 +913,7 @@
 
     frequency: {
       label: 'Frequency',
+      glyph: 'f',
       base: 'Hz',
       default: ['Hz', 'rpm'],
       units: {
@@ -902,6 +928,7 @@
 
     viscosity_d: {
       label: 'Viscosity (dyn.)',
+      glyph: 'μ',
       base: 'Pa·s',
       default: ['cP', 'Pa·s'],
       units: {
@@ -915,6 +942,7 @@
 
     viscosity_k: {
       label: 'Viscosity (kin.)',
+      glyph: 'ν',
       base: 'm²/s',
       default: ['cSt', 'm²/s'],
       units: {
@@ -984,15 +1012,12 @@
     el.categories.innerHTML = '';
     Object.entries(CATEGORIES).forEach(([key, cat]) => {
       const b = document.createElement('button');
+      b.type = 'button';
       b.className = 'cat-pill' + (key === state.category ? ' active' : '');
-      b.innerHTML = `<span class="dot"></span>${cat.label}`;
+      const glyph = cat.glyph || '•';
+      b.innerHTML = `<span class="glyph">${glyph}</span><span class="lbl">${cat.label}</span>`;
       b.addEventListener('click', () => selectCategory(key));
       el.categories.appendChild(b);
-    });
-    // scroll active into view
-    requestAnimationFrame(() => {
-      const active = el.categories.querySelector('.cat-pill.active');
-      if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     });
   }
 
