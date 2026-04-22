@@ -9,6 +9,9 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#0c0d0f" />
 <meta name="format-detection" content="telephone=no" />
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Scalar — Engineering Units</title>
 
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230c0d0f'/><path d='M42 132 L90 48 L138 132 Z' fill='none' stroke='%23e8b657' stroke-width='9' stroke-linejoin='round' stroke-linecap='round'/><circle cx='90' cy='108' r='5' fill='%23e8b657'/></svg>" />
@@ -18,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="scalar.css">
+<link rel="stylesheet" href="scalar.css?v=1.2.1">
 </head>
 <body>
 <div class="app">
@@ -30,7 +33,7 @@
       </div>
       <div class="brand-text">
         <h1>Scalar</h1>
-        <p>engineering units · v1.2.0</p>
+        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.1 ↻</button></p>
       </div>
     </div>
     <div class="precision" role="group" aria-label="Precision">
@@ -97,7 +100,7 @@
 
 <div class="toast" id="toast">copied</div>
 
-<script src="categories.js"></script>
-<script src="app.js"></script>
+<script src="categories.js?v=1.2.1"></script>
+<script src="app.js?v=1.2.1"></script>
 </body>
 </html>
