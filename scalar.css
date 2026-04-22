@@ -132,6 +132,25 @@ body::after {
   font-weight: 500;
 }
 
+.version {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: color 0.15s ease;
+}
+
+.version:active {
+  color: var(--accent);
+}
+
 .precision {
   display: flex;
   align-items: center;
