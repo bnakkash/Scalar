@@ -11,6 +11,7 @@ window.CATEGORIES = {
       MPa:      { name: 'Megapascal',                 sym: 'MPa',    f: 1e6 },
       bar:      { name: 'Bar',                        sym: 'bar',    f: 1e5 },
       mbar:     { name: 'Millibar',                   sym: 'mbar',   f: 100 },
+      hPa:      { name: 'Hectopascal',                sym: 'hPa',    f: 100 },
       psi:      { name: 'Pound-force per sq. inch',   sym: 'psi',    f: 6894.757293168 },
       psig:     { name: 'psi (gauge, same scale)',    sym: 'psig',   f: 6894.757293168 },
       atm:      { name: 'Atmosphere (standard)',      sym: 'atm',    f: 101325 },
@@ -104,6 +105,7 @@ window.CATEGORIES = {
     default: ['in', 'mm'],
     units: {
       m:   { name: 'Meter',       sym: 'm',   f: 1 },
+      dm:  { name: 'Decimeter',   sym: 'dm',  f: 0.1 },
       cm:  { name: 'Centimeter',  sym: 'cm',  f: 0.01 },
       mm:  { name: 'Millimeter',  sym: 'mm',  f: 0.001 },
       um:  { name: 'Micrometer',  sym: 'µm',  f: 1e-6 },
@@ -127,6 +129,7 @@ window.CATEGORIES = {
       kg:    { name: 'Kilogram',         sym: 'kg',  f: 1 },
       g:     { name: 'Gram',             sym: 'g',   f: 1e-3 },
       mg:    { name: 'Milligram',        sym: 'mg',  f: 1e-6 },
+      ug:    { name: 'Microgram',        sym: 'µg',  f: 1e-9 },
       tonne: { name: 'Metric ton',       sym: 't',   f: 1000 },
       lb:    { name: 'Pound',            sym: 'lb',  f: 0.45359237 },
       oz:    { name: 'Ounce',            sym: 'oz',  f: 0.028349523125 },
@@ -145,7 +148,9 @@ window.CATEGORIES = {
     units: {
       m3:    { name: 'Cubic meter',       sym: 'm³',    f: 1 },
       L:     { name: 'Liter',             sym: 'L',     f: 1e-3 },
+      dL:    { name: 'Deciliter',         sym: 'dL',    f: 1e-4 },
       mL:    { name: 'Milliliter',        sym: 'mL',    f: 1e-6 },
+      uL:    { name: 'Microliter',        sym: 'µL',    f: 1e-9 },
       cm3:   { name: 'Cubic centimeter',  sym: 'cm³',   f: 1e-6 },
       in3:   { name: 'Cubic inch',        sym: 'in³',   f: 1.6387064e-5 },
       ft3:   { name: 'Cubic foot',        sym: 'ft³',   f: 0.028316846592 },
@@ -168,7 +173,9 @@ window.CATEGORIES = {
       W:    { name: 'Watt',                sym: 'W',     f: 1 },
       kW:   { name: 'Kilowatt',            sym: 'kW',    f: 1000 },
       MW:   { name: 'Megawatt',            sym: 'MW',    f: 1e6 },
+      GW:   { name: 'Gigawatt',            sym: 'GW',    f: 1e9 },
       mW:   { name: 'Milliwatt',           sym: 'mW',    f: 1e-3 },
+      uW:   { name: 'Microwatt',           sym: 'µW',    f: 1e-6 },
       HP:   { name: 'Horsepower (mech)',   sym: 'HP',    f: 745.699871582 },
       HPm:  { name: 'Horsepower (metric)', sym: 'HP (m)',f: 735.49875 },
       btuh: { name: 'BTU per hour',        sym: 'BTU/h', f: 0.29307107 },
@@ -186,6 +193,7 @@ window.CATEGORIES = {
     default: ['kWh', 'BTU'],
     units: {
       J:    { name: 'Joule',           sym: 'J',     f: 1 },
+      mJ:   { name: 'Millijoule',      sym: 'mJ',    f: 1e-3 },
       kJ:   { name: 'Kilojoule',       sym: 'kJ',    f: 1000 },
       MJ:   { name: 'Megajoule',       sym: 'MJ',    f: 1e6 },
       Wh:   { name: 'Watt-hour',       sym: 'Wh',    f: 3600 },
@@ -193,6 +201,7 @@ window.CATEGORIES = {
       MWh:  { name: 'Megawatt-hour',   sym: 'MWh',   f: 3.6e9 },
       BTU:  { name: 'British thermal unit', sym: 'BTU', f: 1055.05585262 },
       kBTU: { name: 'Thousand BTU',    sym: 'kBTU',  f: 1055055.85262 },
+      MMBtu:{ name: 'Million BTU',     sym: 'MMBtu', f: 1055055852.62 },
       therm:{ name: 'Therm (US)',      sym: 'therm', f: 1.054804e8 },
       cal:  { name: 'Calorie',         sym: 'cal',   f: 4.184 },
       kcal: { name: 'Kilocalorie',     sym: 'kcal',  f: 4184 },
@@ -208,6 +217,8 @@ window.CATEGORIES = {
     default: ['lbf', 'N'],
     units: {
       N:    { name: 'Newton',      sym: 'N',    f: 1 },
+      mN:   { name: 'Millinewton', sym: 'mN',   f: 1e-3 },
+      uN:   { name: 'Micronewton', sym: 'µN',   f: 1e-6 },
       kN:   { name: 'Kilonewton',  sym: 'kN',   f: 1000 },
       MN:   { name: 'Meganewton',  sym: 'MN',   f: 1e6 },
       lbf:  { name: 'Pound-force', sym: 'lbf',  f: 4.4482216152605 },
@@ -226,6 +237,8 @@ window.CATEGORIES = {
     default: ['mph', 'ft/s'],
     units: {
       ms:    { name: 'Meter per second',   sym: 'm/s',    f: 1 },
+      cms:   { name: 'Centimeter/second',  sym: 'cm/s',   f: 0.01 },
+      mms:   { name: 'Millimeter/second',  sym: 'mm/s',   f: 1e-3 },
       kmh:   { name: 'Kilometer per hour', sym: 'km/h',   f: 1/3.6 },
       fts:   { name: 'Foot per second',    sym: 'ft/s',   f: 0.3048 },
       ftm:   { name: 'Foot per minute',    sym: 'ft/min', f: 0.3048/60 },
@@ -261,6 +274,7 @@ window.CATEGORIES = {
     default: ['lbf·ft', 'N·m'],
     units: {
       Nm:    { name: 'Newton-meter',         sym: 'N·m',    f: 1 },
+      mNm:   { name: 'Millinewton-meter',    sym: 'mN·m',   f: 1e-3 },
       kNm:   { name: 'Kilonewton-meter',     sym: 'kN·m',   f: 1000 },
       lbft:  { name: 'Pound-force foot',     sym: 'lbf·ft', f: 1.3558179483314 },
       lbin:  { name: 'Pound-force inch',     sym: 'lbf·in', f: 0.1129848290276 },
@@ -327,9 +341,11 @@ window.CATEGORIES = {
     default: ['Hz', 'rpm'],
     units: {
       Hz:  { name: 'Hertz',      sym: 'Hz',  f: 1 },
+      mHz: { name: 'Millihertz', sym: 'mHz', f: 1e-3 },
       kHz: { name: 'Kilohertz',  sym: 'kHz', f: 1000 },
       MHz: { name: 'Megahertz',  sym: 'MHz', f: 1e6 },
       GHz: { name: 'Gigahertz',  sym: 'GHz', f: 1e9 },
+      THz: { name: 'Terahertz',  sym: 'THz', f: 1e12 },
       rpm: { name: 'Rev/min',    sym: 'rpm', f: 1/60 },
       rads:{ name: 'Radian/sec', sym: 'rad/s', f: 1/(2*Math.PI) },
     }
