@@ -277,6 +277,12 @@
     if (el.toValue.textContent === '—') return;
     el.swapBtn.click();
   });
+  el.relation.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      el.relation.click();
+    }
+  });
 
   document.querySelectorAll('.precision-btn').forEach(btn => {
     btn.addEventListener('click', () => {
