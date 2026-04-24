@@ -260,7 +260,8 @@
     updateLabels();
 
     if (isFinite(parsedOut)) {
-      el.fromValue.value = formatNum(parsedOut, state.precision).replace(/,/g, '');
+      // Normalize to plain numeric form (no commas, no superscript) so the input stays editable.
+      el.fromValue.value = displayToNumeric(formatNum(parsedOut, state.precision));
       state.fromValue = el.fromValue.value;
     }
     recompute();
