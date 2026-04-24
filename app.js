@@ -179,11 +179,14 @@
     el.toValue.textContent = formatNum(out, state.precision);
 
     const oneOut = convert(1, state.fromUnit, state.toUnit);
+    const oneIn  = convert(1, state.toUnit, state.fromUnit);
     const cat = CATEGORIES[state.category];
     const fu = cat.units[state.fromUnit];
     const tu = cat.units[state.toUnit];
     el.relation.innerHTML =
-      `1 ${fu.sym} <span class="eq">=</span> ${formatNum(oneOut, 6)} ${tu.sym}`;
+      `1 ${fu.sym} <span class="eq">=</span> ${formatNum(oneOut, 6)} ${tu.sym}` +
+      ` <span class="sep">·</span> ` +
+      `1 ${tu.sym} <span class="eq">=</span> ${formatNum(oneIn, 6)} ${fu.sym}`;
 
     fitText(el.toValue, baseValueFontSize());
     fitText(el.fromValue, baseValueFontSize());
