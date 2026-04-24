@@ -461,6 +461,15 @@ body::after {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.relation:active {
+  border-color: var(--accent);
+  color: var(--text-dim);
 }
 
 .relation .eq { color: var(--accent); margin: 0 4px; }
