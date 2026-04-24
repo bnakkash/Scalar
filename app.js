@@ -272,25 +272,44 @@
     });
   });
 
-  el.toValue.addEventListener('click', async () => {
-    const t = el.toValue.textContent;
-    if (t === '—') return;
-    const plain = displayToNumeric(t);
+  async function copyText(text) {
     try {
-      await navigator.clipboard.writeText(plain);
-      toast('copied ' + plain);
-      haptic(12);
+      await navigator.clipboard.writeText(text);
+      toast('copied ' + text);
     } catch (_) {
       const r = document.createRange();
       r.selectNode(el.toValue);
       window.getSelection().removeAllRanges();
       window.getSelection().addRange(r);
-      try {
-        document.execCommand('copy');
-        toast('copied');
-      } catch (_) {}
+      try { document.execCommand('copy'); toast('copied'); } catch (_) {}
       window.getSelection().removeAllRanges();
     }
+  }
+
+  // Long-press = just number; tap = "value unit". Suppress click after a long-press.
+  let pressTimer = null;
+  let longPressed = false;
+  el.toValue.addEventListener('touchstart', () => {
+    longPressed = false;
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(() => {
+      if (el.toValue.textContent === '—') return;
+      longPressed = true;
+      copyText(displayToNumeric(el.toValue.textContent));
+      haptic(25);
+    }, 500);
+  }, { passive: true });
+  el.toValue.addEventListener('touchend', () => clearTimeout(pressTimer));
+  el.toValue.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+  el.toValue.addEventListener('click', () => {
+    if (longPressed) { longPressed = false; return; }
+    const t = el.toValue.textContent;
+    if (t === '—') return;
+    const plain = displayToNumeric(t);
+    const sym = CATEGORIES[state.category].units[state.toUnit].sym;
+    copyText(plain + ' ' + sym);
+    haptic(12);
   });
 
   function toast(msg) {
