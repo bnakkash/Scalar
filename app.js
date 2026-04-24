@@ -110,7 +110,11 @@
     let s;
     if (abs >= 1e8 || abs < 1e-4) {
       s = n.toExponential(prec - 1);
-      return s.replace('e+', 'e').replace(/e(-?)0*(\d)/, 'e$1$2');
+      const [mantissa, expRaw] = s.split('e');
+      let m = mantissa;
+      if (m.includes('.')) m = m.replace(/0+$/, '').replace(/\.$/, '');
+      const exp = parseInt(expRaw, 10);
+      return m + '×10' + toSuperscript(String(exp));
     }
     s = n.toPrecision(prec);
     if (s.includes('.') && !s.includes('e')) {
@@ -122,6 +126,20 @@
       s = parts.join('.');
     }
     return s;
+  }
+
+  // Convert display string (may contain superscript ×10ⁿ or commas) back to a parseable number string.
+  const SUPER_FROM = {'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-'};
+  function toSuperscript(str) {
+    const SUPER = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+    return str.split('').map(c => SUPER[c] || c).join('');
+  }
+  function displayToNumeric(s) {
+    if (!s) return '';
+    return s
+      .replace(/,/g, '')
+      .replace(/×10/, 'e')
+      .split('').map(c => SUPER_FROM[c] || c).join('');
   }
 
   // Shrink font-size until content fits the element's content box.
@@ -223,7 +241,7 @@
   });
 
   el.swapBtn.addEventListener('click', () => {
-    const currentOut = el.toValue.textContent.replace(/,/g, '');
+    const currentOut = displayToNumeric(el.toValue.textContent);
     const parsedOut = parseFloat(currentOut);
 
     const oldFrom = state.fromUnit;
@@ -257,7 +275,7 @@
   el.toValue.addEventListener('click', async () => {
     const t = el.toValue.textContent;
     if (t === '—') return;
-    const plain = t.replace(/,/g, '');
+    const plain = displayToNumeric(t);
     try {
       await navigator.clipboard.writeText(plain);
       toast('copied ' + plain);
