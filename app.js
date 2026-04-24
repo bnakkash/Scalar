@@ -240,6 +240,10 @@
   el.fromValue.addEventListener('focus', () => {
     el.fromCard.classList.add('focused');
     setTimeout(() => el.fromValue.select(), 20);
+    // Keep the `to` card visible above the iOS keyboard during typing.
+    setTimeout(() => {
+      try { el.fromCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {}
+    }, 300);
   });
 
   el.fromValue.addEventListener('blur', () => {
