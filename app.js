@@ -108,7 +108,7 @@
     if (n === 0) return '0';
     const abs = Math.abs(n);
     let s;
-    if (abs >= 1e8 || abs < 1e-4) {
+    if (abs >= Math.pow(10, prec) || abs < 1e-4) {
       s = n.toExponential(prec - 1);
       const [mantissa, expRaw] = s.split('e');
       let m = mantissa;
