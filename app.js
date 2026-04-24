@@ -268,6 +268,11 @@
     haptic(10);
   });
 
+  el.relation.addEventListener('click', () => {
+    if (el.toValue.textContent === '—') return;
+    el.swapBtn.click();
+  });
+
   document.querySelectorAll('.precision-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.precision-btn').forEach(b => b.classList.remove('active'));
