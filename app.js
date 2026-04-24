@@ -142,6 +142,12 @@
       .split('').map(c => SUPER_FROM[c] || c).join('');
   }
 
+  // Tolerant parse: accepts "1,234.5", "1.5e3", "1.2×10⁵", "5.5 psi", leading/trailing spaces.
+  function parseInputValue(str) {
+    if (!str) return '';
+    return displayToNumeric(str).replace(/[\s,]/g, '');
+  }
+
   // Shrink font-size until content fits the element's content box.
   function fitText(node, baseSize, minSize) {
     const base = baseSize || 36;
@@ -161,7 +167,7 @@
   }
 
   function recompute(animate = true) {
-    const raw = el.fromValue.value.trim().replace(/,/g, '');
+    const raw = parseInputValue(el.fromValue.value);
     if (raw === '' || raw === '-' || raw === '.') {
       el.toValue.textContent = '—';
       el.relation.textContent = '—';
@@ -226,10 +232,7 @@
   });
 
   el.fromValue.addEventListener('input', (e) => {
-    let v = e.target.value;
-    v = v.replace(/\s/g, '');
-    if (v !== e.target.value) e.target.value = v;
-    state.fromValue = v;
+    state.fromValue = e.target.value;
     recompute();
     saveState();
   });
