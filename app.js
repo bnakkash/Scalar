@@ -354,6 +354,12 @@
   });
 
   function init() {
+    if (!CATEGORIES || typeof CATEGORIES !== 'object') {
+      el.categories.textContent = 'Failed to load unit data. Tap to reload.';
+      el.categories.style.cursor = 'pointer';
+      el.categories.addEventListener('click', () => location.reload());
+      return;
+    }
     loadState();
     if (!CATEGORIES[state.category]) state.category = 'pressure';
     document.querySelectorAll('.precision-btn').forEach(b => {
