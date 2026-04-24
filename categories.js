@@ -202,7 +202,7 @@ window.CATEGORIES = {
       BTU:  { name: 'British thermal unit', sym: 'BTU', f: 1055.05585262 },
       kBTU: { name: 'Thousand BTU',    sym: 'kBTU',  f: 1055055.85262 },
       MMBtu:{ name: 'Million BTU',     sym: 'MMBtu', f: 1055055852.62 },
-      therm:{ name: 'Therm (US)',      sym: 'therm', f: 1.054804e8 },
+      therm:{ name: 'Therm (US)',      sym: 'therm', f: 1.05505585262e8 },
       cal:  { name: 'Calorie',         sym: 'cal',   f: 4.184 },
       kcal: { name: 'Kilocalorie',     sym: 'kcal',  f: 4184 },
       ftlbf:{ name: 'Foot-pound',      sym: 'ft·lbf',f: 1.35581794833 },
