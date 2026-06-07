@@ -12,6 +12,7 @@
     fromValue: '1',
     precision: 6,
     perCategory: {},
+    motor: {},
   };
 
   function loadState() {
@@ -42,6 +43,21 @@
     swapBtn: document.getElementById('swapBtn'),
     relation: document.getElementById('relation'),
     toast: document.getElementById('toast'),
+    // Motor LRC panel
+    convPanel: document.getElementById('convPanel'),
+    motorPanel: document.getElementById('motorPanel'),
+    mHP: document.getElementById('mHP'),
+    mV: document.getElementById('mV'),
+    mPhase: document.getElementById('mPhase'),
+    mCode: document.getElementById('mCode'),
+    mEff: document.getElementById('mEff'),
+    mPF: document.getElementById('mPF'),
+    mFLA: document.getElementById('mFLA'),
+    mFlaNote: document.getElementById('mFlaNote'),
+    mResults: document.getElementById('mResults'),
+    mXfmr: document.getElementById('mXfmr'),
+    mZ: document.getElementById('mZ'),
+    mDip: document.getElementById('mDip'),
   };
 
   function renderCategories() {
@@ -167,6 +183,7 @@
   }
 
   function recompute(animate = true) {
+    if (isMotorMode()) return;
     const raw = parseInputValue(el.fromValue.value);
     if (raw === '' || raw === '-' || raw === '.') {
       el.toValue.textContent = '—';
@@ -206,11 +223,16 @@
 
   function selectCategory(key) {
     if (key === state.category) return;
-    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
+    if (!isMotorMode()) state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
     state.category = key;
     renderCategories();
-    renderUnits();
-    recompute();
+    if (isMotorMode()) {
+      showMotorMode();
+    } else {
+      showConverterMode();
+      renderUnits();
+      recompute();
+    }
     saveState();
     haptic(8);
   }
@@ -251,6 +273,7 @@
   });
 
   el.swapBtn.addEventListener('click', () => {
+    if (isMotorMode()) return;
     const currentOut = displayToNumeric(el.toValue.textContent);
     const parsedOut = parseFloat(currentOut);
 
@@ -359,6 +382,197 @@
     fitText(el.fromValue, baseValueFontSize());
   });
 
+  /* ====================================================================
+     MOTOR LRC / INRUSH CALCULATOR
+     A non-converter category (mode: 'motor') with its own panel + logic.
+     ==================================================================== */
+
+  // NEMA locked-rotor code letters → [min, max] kVA per HP.
+  // (Letters I, O, Q are not used by NEMA.)
+  const NEMA_CODE = {
+    A: [0, 3.14],     B: [3.15, 3.54],  C: [3.55, 3.99],  D: [4.0, 4.49],
+    E: [4.5, 4.99],   F: [5.0, 5.59],   G: [5.6, 6.29],   H: [6.3, 7.09],
+    J: [7.1, 7.99],   K: [8.0, 8.99],   L: [9.0, 9.99],   M: [10.0, 11.19],
+    N: [11.2, 12.49], P: [12.5, 13.99], R: [14.0, 15.99], S: [16.0, 17.99],
+    T: [18.0, 19.99], U: [20.0, 22.39], V: [22.4, 25.0],
+  };
+
+  const MOTOR_FIELDS = ['mHP','mV','mPhase','mCode','mEff','mPF','mFLA','mXfmr','mZ'];
+
+  function isMotorMode() {
+    const cat = CATEGORIES[state.category];
+    return !!(cat && cat.mode === 'motor');
+  }
+
+  function mNum(id) {
+    const v = parseFloat((el[id].value || '').replace(/[,\s]/g, ''));
+    return isFinite(v) ? v : NaN;
+  }
+
+  // Round amps: whole numbers ≥100, one decimal below.
+  function fmtAmps(n) {
+    if (!isFinite(n)) return '—';
+    const r = n >= 100 ? Math.round(n) : Math.round(n * 10) / 10;
+    return r.toLocaleString('en-US');
+  }
+  function rangeAmps(lo, hi) {
+    const a = fmtAmps(lo), b = fmtAmps(hi);
+    return a === b ? a : a + ' – ' + b;
+  }
+
+  function buildCodeOptions() {
+    if (el.mCode.options.length) return;
+    const none = document.createElement('option');
+    none.value = ''; none.textContent = '— none —';
+    el.mCode.appendChild(none);
+    Object.keys(NEMA_CODE).forEach(letter => {
+      const [lo, hi] = NEMA_CODE[letter];
+      const o = document.createElement('option');
+      o.value = letter;
+      o.textContent = `${letter} · ${lo}–${hi} kVA/HP`;
+      el.mCode.appendChild(o);
+    });
+  }
+
+  function restoreMotorInputs() {
+    MOTOR_FIELDS.forEach(id => {
+      if (state.motor && state.motor[id] != null) el[id].value = state.motor[id];
+    });
+  }
+
+  function showMotorMode() {
+    buildCodeOptions();
+    restoreMotorInputs();
+    el.convPanel.hidden = true;
+    el.relation.hidden = true;
+    el.motorPanel.hidden = false;
+    computeMotor();
+  }
+
+  function showConverterMode() {
+    el.motorPanel.hidden = true;
+    el.convPanel.hidden = false;
+    el.relation.hidden = false;
+  }
+
+  // line-to-line factor for 3-phase, 1 for single phase
+  function phaseK(phase) { return phase === 1 ? 1 : Math.sqrt(3); }
+
+  function computeMotor() {
+    const HP    = mNum('mHP');
+    const V     = mNum('mV');
+    const phase = parseInt(el.mPhase.value, 10) === 1 ? 1 : 3;
+    const code  = el.mCode.value || '';
+    const eff   = (isFinite(mNum('mEff')) ? mNum('mEff') : 93) / 100;
+    const pf    = isFinite(mNum('mPF')) ? mNum('mPF') : 0.86;
+    const flaIn = mNum('mFLA');
+
+    // Resolve FLA: nameplate value, else estimate from HP/V/eff/PF.
+    let fla = NaN, estimated = false;
+    if (isFinite(flaIn) && flaIn > 0) {
+      fla = flaIn;
+    } else if (HP > 0 && V > 0) {
+      fla = HP * 746 / (phaseK(phase) * V * eff * pf);
+      estimated = true;
+    }
+
+    // FLA note
+    if (estimated) {
+      el.mFlaNote.textContent = `≈ ${fmtAmps(fla)} A estimated from ${HP} HP, ${V} V, ${Math.round(eff*100)}% eff, ${pf} PF.`;
+      el.mFlaNote.classList.remove('warn');
+    } else if (isFinite(fla)) {
+      el.mFlaNote.textContent = 'Using nameplate FLA. Clear to estimate from HP & voltage.';
+      el.mFlaNote.classList.remove('warn');
+    } else {
+      el.mFlaNote.textContent = 'Enter FLA, or HP + voltage to estimate it.';
+      el.mFlaNote.classList.add('warn');
+    }
+
+    // ---- Inrush rows ----
+    const rows = [];
+    let dolHi = NaN; // worst-case across-the-line amps, for voltage dip
+
+    // DOL: exact from code letter when HP+V known, else 6–8× FLA rule of thumb.
+    if (code && HP > 0 && V > 0) {
+      const [kLo, kHi] = NEMA_CODE[code];
+      const k = phaseK(phase) * V;
+      const lraLo = kLo * HP * 1000 / k;
+      const lraHi = kHi * HP * 1000 / k;
+      dolHi = lraHi;
+      rows.push({ cls: 'hi', label: 'DOL · across-the-line',
+        val: rangeAmps(lraLo, lraHi),
+        sub: `NEMA code ${code} · ${kLo}–${kHi} kVA/HP (exact)` });
+    } else if (isFinite(fla)) {
+      dolHi = 8 * fla;
+      rows.push({ cls: 'hi', label: 'DOL · across-the-line',
+        val: rangeAmps(6 * fla, 8 * fla),
+        sub: code ? '6–8× FLA · add HP + V for exact code calc' : '6–8× FLA (NEMA Design B)' });
+    }
+
+    if (isFinite(fla)) {
+      rows.push({ label: 'Premium-efficiency DOL', val: rangeAmps(10 * fla, 12 * fla), sub: '10–12× FLA (first cycles)' });
+      rows.push({ label: 'Soft starter',           val: rangeAmps(3 * fla, 4.5 * fla), sub: '3–4.5× FLA (reduced voltage)' });
+      rows.push({ label: 'VFD',                     val: rangeAmps(1 * fla, 1.5 * fla), sub: '1–1.5× FLA (ramped)' });
+    }
+
+    if (rows.length) {
+      el.mResults.innerHTML = rows.map(r =>
+        `<button type="button" class="m-row ${r.cls || ''}" data-copy="${r.val} A">
+           <span class="m-row-label">${r.label}</span>
+           <span class="m-row-val">${r.val}<i>A</i></span>
+           <span class="m-row-sub">${r.sub}</span>
+         </button>`).join('');
+      el.mResults.querySelectorAll('.m-row').forEach(b => {
+        b.addEventListener('click', () => { copyText(b.dataset.copy); haptic(12); });
+      });
+    } else {
+      el.mResults.innerHTML = `<div class="m-empty">Enter the motor's <b>FLA</b> — or <b>HP + voltage</b> to estimate it — to see starting inrush across DOL, soft-start and VFD.</div>`;
+    }
+
+    // ---- Voltage dip ----
+    renderVoltageDip(V, phase, dolHi);
+  }
+
+  function renderVoltageDip(V, phase, dolHi) {
+    const xfmr = mNum('mXfmr');
+    const Z = isFinite(mNum('mZ')) ? mNum('mZ') : 5.75;
+
+    if (!(V > 0) || !(xfmr > 0) || !isFinite(dolHi)) {
+      el.mDip.innerHTML = `<span class="sub">Enter voltage, transformer kVA and (optionally) %Z to estimate the supply voltage dip at start.</span>`;
+      return;
+    }
+
+    const SCkVA = xfmr * 100 / Z;           // transformer short-circuit capacity
+    const k = phaseK(phase) * V / 1000;     // kVA per amp
+    const dipFor = (amps) => {
+      const kva = k * amps;
+      return kva / (kva + SCkVA) * 100;
+    };
+
+    const dip = dipFor(dolHi);
+    const residual = V * (1 - dip / 100);
+    const cls = dip <= 10 ? 'ok' : dip > 20 ? 'bad' : '';
+    const verdict = dip <= 10 ? 'within typical limits' : dip > 20 ? 'excessive — may stall/trip or flicker' : 'borderline — check starter';
+
+    el.mDip.innerHTML =
+      `<span class="big ${cls}">${dip.toFixed(1)}%</span>` +
+      `residual ≈ <b style="color:var(--text)">${fmtAmps(residual)} V</b> at the motor — ${verdict}` +
+      `<div class="sub">across-the-line worst case · soft-start ≈ ${dipFor(dolHi * 4.5 / 8).toFixed(1)}% · VFD ≈ ${dipFor(dolHi * 1.5 / 8).toFixed(1)}%` +
+      ` <span style="opacity:.7">(${fmtAmps(SCkVA)} kVA available, %Z ${Z})</span></div>`;
+  }
+
+  // Persist + recompute on any motor input change.
+  MOTOR_FIELDS.forEach(id => {
+    const node = el[id];
+    if (!node) return;
+    const evt = node.tagName === 'SELECT' ? 'change' : 'input';
+    node.addEventListener(evt, () => {
+      state.motor[id] = node.value;
+      computeMotor();
+      saveState();
+    });
+  });
+
   function init() {
     if (!CATEGORIES || typeof CATEGORIES !== 'object') {
       el.categories.textContent = 'Failed to load unit data. Tap to reload.';
@@ -372,9 +586,13 @@
       b.classList.toggle('active', parseInt(b.dataset.prec, 10) === state.precision);
     });
     renderCategories();
-    renderUnits();
-    el.fromValue.value = state.fromValue || '1';
-    recompute(false);
+    if (isMotorMode()) {
+      showMotorMode();
+    } else {
+      renderUnits();
+      el.fromValue.value = state.fromValue || '1';
+      recompute(false);
+    }
   }
 
   init();

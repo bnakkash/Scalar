@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="scalar.css?v=1.2.13">
+<link rel="stylesheet" href="scalar.css?v=1.2.14">
 </head>
 <body>
 <div class="app">
@@ -33,7 +33,7 @@
       </div>
       <div class="brand-text">
         <h1>Scalar</h1>
-        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.13 ↻</button></p>
+        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.14 ↻</button></p>
       </div>
     </div>
     <div class="precision" role="group" aria-label="Precision">
@@ -46,7 +46,7 @@
 
   <nav class="categories" id="categories" aria-label="Unit categories"></nav>
 
-  <section class="conversion">
+  <section class="conversion" id="convPanel">
     <div class="card" id="fromCard">
       <div class="card-head">
         <span class="card-label">from</span>
@@ -96,11 +96,83 @@
 
   <div class="relation" id="relation" role="button" tabindex="0" aria-label="Swap units">—</div>
 
+  <!-- ===== MOTOR LRC / INRUSH CALCULATOR (mode: 'motor') ===== -->
+  <section class="motor" id="motorPanel" hidden>
+
+    <div class="card motor-card">
+      <div class="card-label">motor nameplate</div>
+      <div class="m-grid">
+        <label class="m-field">
+          <span>HP</span>
+          <input id="mHP" inputmode="decimal" autocomplete="off" placeholder="75" />
+        </label>
+        <label class="m-field">
+          <span>Voltage</span>
+          <input id="mV" inputmode="decimal" autocomplete="off" placeholder="460" />
+        </label>
+        <label class="m-field">
+          <span>Phase</span>
+          <span class="m-select">
+            <select id="mPhase">
+              <option value="3">3-phase</option>
+              <option value="1">1-phase</option>
+            </select>
+          </span>
+        </label>
+        <label class="m-field">
+          <span>Code letter</span>
+          <span class="m-select">
+            <select id="mCode"></select>
+          </span>
+        </label>
+        <label class="m-field">
+          <span>Efficiency %</span>
+          <input id="mEff" inputmode="decimal" autocomplete="off" placeholder="93" />
+        </label>
+        <label class="m-field">
+          <span>Power factor</span>
+          <input id="mPF" inputmode="decimal" autocomplete="off" placeholder="0.86" />
+        </label>
+      </div>
+
+      <div class="m-fla">
+        <span class="card-label">full-load amps · FLA</span>
+        <div class="value-row">
+          <input class="value-input" id="mFLA" type="text" inputmode="decimal"
+                 autocomplete="off" autocorrect="off" spellcheck="false" placeholder="80" aria-label="Full-load amps" />
+          <span class="m-fla-unit">A</span>
+        </div>
+        <div class="m-note" id="mFlaNote">Leave blank to estimate from HP, voltage, efficiency & PF.</div>
+      </div>
+    </div>
+
+    <div class="card motor-card">
+      <div class="card-label">starting inrush · locked-rotor current</div>
+      <div class="m-results" id="mResults"></div>
+    </div>
+
+    <div class="card motor-card">
+      <div class="card-label">voltage dip at start</div>
+      <div class="m-grid m-grid-2">
+        <label class="m-field">
+          <span>Transformer kVA</span>
+          <input id="mXfmr" inputmode="decimal" autocomplete="off" placeholder="500" />
+        </label>
+        <label class="m-field">
+          <span>Impedance %Z</span>
+          <input id="mZ" inputmode="decimal" autocomplete="off" placeholder="5.75" />
+        </label>
+      </div>
+      <div class="m-dip" id="mDip">—</div>
+    </div>
+
+  </section>
+
 </div>
 
 <div class="toast" id="toast">copied</div>
 
-<script src="categories.js?v=1.2.13"></script>
-<script src="app.js?v=1.2.13"></script>
+<script src="categories.js?v=1.2.14"></script>
+<script src="app.js?v=1.2.14"></script>
 </body>
 </html>
