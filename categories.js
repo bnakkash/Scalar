@@ -389,4 +389,336 @@ window.CATEGORIES = {
     glyph: 'M',
     mode: 'motor',
   },
+
+  /* ====================================================================
+     CALCULATORS (mode: 'calc') — declarative engineering calcs rendered
+     by a generic panel in app.js. Each has `fields` (inputs) and a
+     `compute(a)` that returns { rows:[{label,value,unit,sub,hi}], note }.
+     `a` provides: a.n(id)=parsed number, a.s(id)=string, a.fmt(x)=format.
+     Do NOT reference app.js helpers here — only use `a`.
+     ==================================================================== */
+
+  ohms: {
+    label: "Ohm's Law", glyph: 'Ω', mode: 'calc',
+    fields: [
+      { id: 'V', label: 'Voltage', unit: 'V', ph: '120' },
+      { id: 'I', label: 'Current', unit: 'A', ph: '2' },
+      { id: 'R', label: 'Resistance', unit: 'Ω', ph: '60' },
+      { id: 'P', label: 'Power', unit: 'W', ph: '' },
+    ],
+    compute(a) {
+      let V = a.n('V'), I = a.n('I'), R = a.n('R'), P = a.n('P');
+      const had = { V: isFinite(V), I: isFinite(I), R: isFinite(R), P: isFinite(P) };
+      const known = ['V','I','R','P'].filter(k => had[k]);
+      if (known.length < 2) return { note: 'Enter any two of V, I, R, P to solve for the rest.' };
+      if (had.V && had.I) { R = V/I; P = V*I; }
+      else if (had.V && had.R) { I = V/R; P = V*V/R; }
+      else if (had.V && had.P) { I = P/V; R = V*V/P; }
+      else if (had.I && had.R) { V = I*R; P = I*I*R; }
+      else if (had.I && had.P) { V = P/I; R = P/(I*I); }
+      else if (had.R && had.P) { V = Math.sqrt(P*R); I = Math.sqrt(P/R); }
+      return { rows: [
+        { label: 'Voltage', value: V, unit: 'V', hi: !had.V },
+        { label: 'Current', value: I, unit: 'A', hi: !had.I },
+        { label: 'Resistance', value: R, unit: 'Ω', hi: !had.R },
+        { label: 'Power', value: P, unit: 'W', hi: !had.P },
+      ], note: known.length > 2 ? 'More than two entered — solved from the first valid pair.' : '' };
+    }
+  },
+
+  vdrop: {
+    label: 'Voltage Drop', glyph: 'V', mode: 'calc',
+    fields: [
+      { id: 'sys', label: 'System', type: 'select', def: '3', options: [
+        { v: '3', t: '3-phase' }, { v: '1', t: '1-phase' }, { v: 'dc', t: 'DC' } ] },
+      { id: 'mat', label: 'Conductor', type: 'select', def: 'cu', options: [
+        { v: 'cu', t: 'Copper' }, { v: 'al', t: 'Aluminum' } ] },
+      { id: 'awg', label: 'Wire size', type: 'select', def: '10', options: [
+        { v:'14',t:'14 AWG'},{v:'12',t:'12 AWG'},{v:'10',t:'10 AWG'},{v:'8',t:'8 AWG'},
+        {v:'6',t:'6 AWG'},{v:'4',t:'4 AWG'},{v:'3',t:'3 AWG'},{v:'2',t:'2 AWG'},{v:'1',t:'1 AWG'},
+        {v:'1/0',t:'1/0'},{v:'2/0',t:'2/0'},{v:'3/0',t:'3/0'},{v:'4/0',t:'4/0'},
+        {v:'250',t:'250 kcmil'},{v:'300',t:'300 kcmil'},{v:'350',t:'350 kcmil'},
+        {v:'400',t:'400 kcmil'},{v:'500',t:'500 kcmil'} ] },
+      { id: 'len', label: 'Length (1-way)', unit: 'ft', ph: '100' },
+      { id: 'amp', label: 'Current', unit: 'A', ph: '20' },
+      { id: 'volt', label: 'Source', unit: 'V', ph: '240' },
+    ],
+    compute(a) {
+      // Ω per 1000 ft, NEC Ch.9 Table 8 (DC, stranded, uncoated Cu / Al).
+      const R_CU = {'14':3.07,'12':1.93,'10':1.21,'8':0.764,'6':0.491,'4':0.308,'3':0.245,
+        '2':0.194,'1':0.154,'1/0':0.122,'2/0':0.0967,'3/0':0.0766,'4/0':0.0608,
+        '250':0.0515,'300':0.0429,'350':0.0367,'400':0.0321,'500':0.0258};
+      const R_AL = {'12':3.18,'10':2.00,'8':1.26,'6':0.808,'4':0.508,'3':0.403,'2':0.319,
+        '1':0.253,'1/0':0.201,'2/0':0.159,'3/0':0.126,'4/0':0.100,'250':0.0847,
+        '300':0.0707,'350':0.0605,'400':0.0529,'500':0.0424};
+      const sys = a.s('sys'), mat = a.s('mat'), awg = a.s('awg');
+      const len = a.n('len'), I = a.n('amp'), Vs = a.n('volt');
+      const tbl = mat === 'al' ? R_AL : R_CU;
+      const r = tbl[awg];
+      if (r == null) return { note: 'That size isn’t listed for aluminum — pick 12 AWG or larger.' };
+      if (!isFinite(len) || !isFinite(I)) return { note: 'Enter one-way run length and load current.' };
+      const k = sys === '3' ? Math.sqrt(3) : 2;   // 2 for 1φ & DC (out-and-back), √3 for 3φ
+      const Vd = k * I * r * (len / 1000);
+      const rows = [{ label: 'Voltage drop', value: Vd, unit: 'V', hi: true }];
+      if (isFinite(Vs) && Vs > 0) {
+        const pct = Vd / Vs * 100;
+        rows.push({ label: 'Drop', value: pct, unit: '%',
+          sub: pct <= 3 ? '≤3% — good (branch)' : pct <= 5 ? '3–5% — OK (feeder + branch)' : '>5% — exceeds NEC guidance' });
+        rows.push({ label: 'Voltage at load', value: Vs - Vd, unit: 'V' });
+      }
+      return { rows, note: `${mat === 'al' ? 'Al' : 'Cu'} ${awg} · ${r} Ω/1000ft · ${sys === 'dc' ? 'DC' : sys + 'φ'}` };
+    }
+  },
+
+  power3: {
+    label: '3φ Power', glyph: 'φ', mode: 'calc',
+    fields: [
+      { id: 'sys', label: 'System', type: 'select', def: '3', options: [
+        { v: '3', t: '3-phase' }, { v: '1', t: '1-phase' } ] },
+      { id: 'V', label: 'Voltage', unit: 'V', ph: '480' },
+      { id: 'I', label: 'Current', unit: 'A', ph: '100' },
+      { id: 'pf', label: 'Power factor', ph: '0.9', def: '0.9' },
+    ],
+    compute(a) {
+      const sys = a.s('sys'); const V = a.n('V'), I = a.n('I');
+      let pf = a.n('pf'); if (!isFinite(pf)) pf = 1; pf = Math.min(Math.max(pf, 0), 1);
+      if (!isFinite(V) || !isFinite(I)) return { note: 'Enter line voltage and current.' };
+      const k = sys === '1' ? 1 : Math.sqrt(3);
+      const kVA = k * V * I / 1000;
+      const kW = kVA * pf;
+      const kVAR = Math.sqrt(Math.max(kVA*kVA - kW*kW, 0));
+      return { rows: [
+        { label: 'Apparent power', value: kVA, unit: 'kVA', hi: true },
+        { label: 'Real power', value: kW, unit: 'kW', sub: `PF ${pf}` },
+        { label: 'Reactive power', value: kVAR, unit: 'kVAR' },
+        { label: 'Real power', value: kW / 0.7457, unit: 'HP', sub: 'electrical equiv. (before motor losses)' },
+      ], note: `${sys === '1' ? '1' : '3'}φ · S = ${sys === '1' ? '' : '√3·'}V·I` };
+    }
+  },
+
+  pump: {
+    label: 'Pump Power', glyph: '⌽', mode: 'calc',
+    fields: [
+      { id: 'Q', label: 'Flow', unit: 'gpm', ph: '100' },
+      { id: 'H', label: 'Head', unit: 'ft', ph: '80' },
+      { id: 'sg', label: 'Specific gravity', ph: '1.0', def: '1.0' },
+      { id: 'eff', label: 'Pump eff', unit: '%', ph: '70', def: '70' },
+      { id: 'spd', label: 'New speed (affinity)', unit: '%', ph: 'optional' },
+    ],
+    compute(a) {
+      const Q = a.n('Q'), H = a.n('H');
+      let sg = a.n('sg'); if (!isFinite(sg)) sg = 1;
+      let eff = a.n('eff'); if (!isFinite(eff) || eff <= 0) eff = 70;
+      if (!isFinite(Q) || !isFinite(H)) return { note: 'Enter flow (gpm) and head (ft).' };
+      const whp = Q * H * sg / 3960;
+      const bhp = whp / (eff / 100);
+      const kW = bhp * 0.7457;
+      const rows = [
+        { label: 'Hydraulic power', value: whp, unit: 'HP', hi: true, sub: 'WHP = Q·H·SG / 3960' },
+        { label: 'Brake power', value: bhp, unit: 'HP', sub: `at ${eff}% pump eff` },
+        { label: 'Motor power', value: kW, unit: 'kW' },
+      ];
+      const spd = a.n('spd');
+      if (isFinite(spd) && spd > 0) {
+        const r = spd / 100;
+        rows.push({ label: `Flow @ ${spd}%`, value: Q * r, unit: 'gpm', sub: '∝ N' });
+        rows.push({ label: `Head @ ${spd}%`, value: H * r * r, unit: 'ft', sub: '∝ N²' });
+        rows.push({ label: `Brake power @ ${spd}%`, value: bhp * r * r * r, unit: 'HP', sub: '∝ N³ (affinity)' });
+      }
+      return { rows };
+    }
+  },
+
+  torquehp: {
+    label: 'Torque·HP·RPM', glyph: 'τ', mode: 'calc',
+    fields: [
+      { id: 'T', label: 'Torque', unit: 'lb·ft', ph: '' },
+      { id: 'N', label: 'Speed', unit: 'RPM', ph: '1750' },
+      { id: 'HP', label: 'Power', unit: 'HP', ph: '10' },
+    ],
+    compute(a) {
+      let T = a.n('T'), N = a.n('N'), HP = a.n('HP');
+      const had = { T: isFinite(T), N: isFinite(N), HP: isFinite(HP) };
+      const known = ['T','N','HP'].filter(k => had[k]);
+      if (known.length < 2) return { note: 'Enter any two of torque, speed, power.' };
+      if (had.HP && had.N) T = 5252 * HP / N;
+      else if (had.T && had.N) HP = T * N / 5252;
+      else if (had.T && had.HP) N = 5252 * HP / T;
+      return { rows: [
+        { label: 'Torque', value: T, unit: 'lb·ft', hi: !had.T, sub: `${a.fmt(T * 1.355818)} N·m` },
+        { label: 'Speed', value: N, unit: 'RPM', hi: !had.N },
+        { label: 'Power', value: HP, unit: 'HP', hi: !had.HP, sub: `${a.fmt(HP * 0.7457)} kW` },
+      ], note: 'HP = Torque × RPM / 5252' };
+    }
+  },
+
+  pipe: {
+    label: 'Pipe Flow', glyph: 'R', mode: 'calc',
+    fields: [
+      { id: 'Q', label: 'Flow', unit: 'gpm', ph: '100' },
+      { id: 'd', label: 'Inside dia', unit: 'in', ph: '2' },
+      { id: 'nu', label: 'Kinematic visc', unit: 'cSt', ph: '1.0', def: '1.0' },
+    ],
+    compute(a) {
+      const Q = a.n('Q'), d = a.n('d');
+      let nu = a.n('nu'); if (!isFinite(nu) || nu <= 0) nu = 1.0;
+      if (!isFinite(Q) || !isFinite(d) || d <= 0) return { note: 'Enter flow (gpm) and inside diameter (in).' };
+      const v_fts = 0.4085 * Q / (d * d);                 // ft/s
+      const Re = (v_fts * 0.3048) * (d * 0.0254) / (nu * 1e-6);
+      const regime = Re < 2300 ? 'laminar' : Re < 4000 ? 'transitional' : 'turbulent';
+      const warn = v_fts > 7 ? ' · high — erosion risk' : v_fts < 2 ? ' · low — may silt' : ' · good range';
+      return { rows: [
+        { label: 'Velocity', value: v_fts, unit: 'ft/s', hi: true, sub: `${a.fmt(v_fts * 0.3048)} m/s${warn}` },
+        { label: 'Reynolds number', value: Re, unit: '', sub: regime },
+      ], note: 'Water ν ≈ 1.0 cSt at 20 °C' };
+    }
+  },
+
+  heat: {
+    label: 'Heat Load', glyph: 'Q', mode: 'calc',
+    fields: [
+      { id: 'fluid', label: 'Fluid', type: 'select', def: 'water', options: [
+        { v: 'water', t: 'Water (gpm)' }, { v: 'air', t: 'Air (cfm)' } ] },
+      { id: 'flow', label: 'Flow', unit: 'gpm / cfm', ph: '50' },
+      { id: 'dT', label: 'ΔT', unit: '°F', ph: '20' },
+    ],
+    compute(a) {
+      const fluid = a.s('fluid'); const flow = a.n('flow'); const dT = a.n('dT');
+      if (!isFinite(flow) || !isFinite(dT)) return { note: 'Enter flow and temperature difference (ΔT).' };
+      const k = fluid === 'air' ? 1.08 : 500;             // BTU/h per unit-flow per °F
+      const btu = k * flow * dT;
+      return { rows: [
+        { label: 'Heat load', value: btu, unit: 'BTU/h', hi: true,
+          sub: fluid === 'air' ? 'Q = 1.08 × cfm × ΔT' : 'Q = 500 × gpm × ΔT' },
+        { label: 'Refrigeration', value: btu / 12000, unit: 'tons' },
+        { label: 'Power', value: btu * 0.00029307, unit: 'kW' },
+      ] };
+    }
+  },
+
+  rtd: {
+    label: 'RTD', glyph: 'Pt', mode: 'calc',
+    fields: [
+      { id: 'type', label: 'Sensor', type: 'select', def: '100', options: [
+        { v: '100', t: 'Pt100 (385)' }, { v: '500', t: 'Pt500' }, { v: '1000', t: 'Pt1000' } ] },
+      { id: 'T', label: 'Temperature', unit: '°C', ph: '100' },
+      { id: 'R', label: 'or Resistance', unit: 'Ω', ph: '' },
+    ],
+    // Callendar–Van Dusen, IEC 60751 (α = 0.00385).
+    _A: 3.9083e-3, _B: -5.775e-7, _C: -4.183e-12,
+    res(T, R0) {
+      const t3 = T < 0 ? this._C * (T - 100) * T * T * T : 0;
+      return R0 * (1 + this._A * T + this._B * T * T + t3);
+    },
+    temp(R, R0) {
+      const A = this._A, B = this._B;
+      if (R >= R0) return (-A + Math.sqrt(A * A - 4 * B * (1 - R / R0))) / (2 * B); // T ≥ 0, exact
+      let T = (R / R0 - 1) / A;                                                     // T < 0, Newton on full CVD
+      for (let i = 0; i < 80; i++) {
+        const f = this.res(T, R0) - R;
+        const d = (this.res(T + 0.05, R0) - this.res(T - 0.05, R0)) / 0.1;
+        if (!d) break;
+        const step = f / d; T -= step;
+        if (Math.abs(step) < 1e-5) break;
+      }
+      return T;
+    },
+    compute(a) {
+      const R0 = parseFloat(a.s('type'));
+      const T = a.n('T'), R = a.n('R');
+      if (isFinite(T)) {
+        return { rows: [
+          { label: 'Temperature', value: T, unit: '°C', sub: `${a.fmt(T * 9/5 + 32)} °F` },
+          { label: 'Resistance', value: this.res(T, R0), unit: 'Ω', hi: true },
+        ] };
+      }
+      if (isFinite(R)) {
+        const t = this.temp(R, R0);
+        return { rows: [
+          { label: 'Temperature', value: t, unit: '°C', hi: true, sub: `${a.fmt(t * 9/5 + 32)} °F` },
+          { label: 'Resistance', value: R, unit: 'Ω' },
+        ] };
+      }
+      return { note: 'Enter a temperature (→ resistance) or a resistance (→ temperature).' };
+    }
+  },
+
+  tc: {
+    label: 'Thermocouple', glyph: 'TC', mode: 'calc',
+    fields: [
+      { id: 'type', label: 'Type', type: 'select', def: 'K', options: [
+        { v: 'K', t: 'Type K' }, { v: 'J', t: 'Type J' }, { v: 'T', t: 'Type T' }, { v: 'E', t: 'Type E' } ] },
+      { id: 'T', label: 'Process temp', unit: '°C', ph: '100' },
+      { id: 'cj', label: 'Cold junction', unit: '°C', ph: '25', def: '25' },
+      { id: 'mv', label: 'or measured EMF', unit: 'mV', ph: '' },
+    ],
+    // NIST ITS-90 reference functions (T in °C → EMF in mV). Horner on c0..cn.
+    _C: {
+      K: [
+        { lo: -270, hi: 0, c: [0, 3.9450128025e-2, 2.3622373598e-5, -3.2858906784e-7, -4.9904828777e-9, -6.7509059173e-11, -5.7410327428e-13, -3.1088872894e-15, -1.0451609365e-17, -1.9889266878e-20, -1.6322697486e-23] },
+        { lo: 0, hi: 1372, c: [-1.7600413686e-2, 3.8921204975e-2, 1.8558770032e-5, -9.9457592874e-8, 3.1840945719e-10, -5.6072844889e-13, 5.6075059059e-16, -3.2020720003e-19, 9.7151147152e-23, -1.2104721275e-26], exp: [0.1185976, -1.183432e-4, 126.9686] },
+      ],
+      J: [
+        { lo: -210, hi: 760, c: [0, 5.0381187815e-2, 3.0475836930e-5, -8.5681065720e-8, 1.3228195295e-10, -1.7052958337e-13, 2.0948090697e-16, -1.2538395336e-19, 1.5631725697e-23] },
+        { lo: 760, hi: 1200, c: [2.9645625681e2, -1.4976127786, 3.1787103924e-3, -3.1847686701e-6, 1.5720819004e-9, -3.0691369056e-13] },
+      ],
+      T: [
+        { lo: -270, hi: 0, c: [0, 3.8748106364e-2, 4.4194434347e-5, 1.1844323105e-7, 2.0032973554e-8, 9.0138019559e-10, 2.2651156593e-11, 3.6071154205e-13, 3.8493939883e-15, 2.8213521925e-17, 1.4251594779e-19, 4.8768662286e-22, 1.0795539270e-24, 1.3945027062e-27, 7.9795153927e-31] },
+        { lo: 0, hi: 400, c: [0, 3.8748106364e-2, 3.3292227880e-5, 2.0618243404e-7, -2.1882256846e-9, 1.0996880928e-11, -3.0815758772e-14, 4.5479135290e-17, -2.7512901673e-20] },
+      ],
+      E: [
+        { lo: -270, hi: 0, c: [0, 5.8665508708e-2, 4.5410977124e-5, -7.7998048686e-7, -2.5800160843e-8, -5.9452583057e-10, -9.3214058667e-12, -1.0287605534e-13, -8.0370123621e-16, -4.3979497391e-18, -1.6414776355e-20, -3.9673619516e-23, -5.5827328721e-26, -3.4657842013e-29] },
+        { lo: 0, hi: 1000, c: [0, 5.8665508710e-2, 4.5032275582e-5, 2.8908407212e-8, -3.3056896652e-10, 6.5024403270e-13, -1.9197495504e-16, -1.2536600497e-18, 2.1489217569e-21, -1.4388041782e-24, 3.5960899481e-28] },
+      ],
+    },
+    emf(type, T) {
+      const segs = this._C[type];
+      for (const s of segs) {
+        if (T >= s.lo && T <= s.hi) {
+          let e = 0;
+          for (let i = s.c.length - 1; i >= 0; i--) e = e * T + s.c[i];
+          if (s.exp) e += s.exp[0] * Math.exp(s.exp[1] * (T - s.exp[2]) * (T - s.exp[2]));
+          return e;
+        }
+      }
+      return NaN;
+    },
+    tempFromEmf(type, E) {
+      if (!isFinite(E)) return NaN;
+      // EMF is monotonic in T for these types → bisection over the full range.
+      const segs = this._C[type];
+      let a = segs[0].lo, b = segs[segs.length - 1].hi;
+      if (E < this.emf(type, a) || E > this.emf(type, b)) return NaN;
+      for (let i = 0; i < 100; i++) {
+        const m = (a + b) / 2;
+        const fm = this.emf(type, m) - E;
+        if (Math.abs(fm) < 1e-6 || (b - a) < 1e-5) return m;
+        if (fm < 0) a = m; else b = m;
+      }
+      return (a + b) / 2;
+    },
+    compute(a) {
+      const type = a.s('type');
+      let cj = a.n('cj'); if (!isFinite(cj)) cj = 0;
+      const T = a.n('T'), mv = a.n('mv');
+      if (isFinite(T)) {
+        const e = this.emf(type, T) - this.emf(type, cj);
+        if (!isFinite(e)) return { note: `Temperature out of range for type ${type}.` };
+        const sens = this.emf(type, T + 0.5) - this.emf(type, T - 0.5);
+        return { rows: [
+          { label: 'Thermocouple EMF', value: e, unit: 'mV', hi: true, sub: `type ${type} · CJ ${cj} °C` },
+          { label: 'Sensitivity', value: sens, unit: 'mV/°C' },
+        ] };
+      }
+      if (isFinite(mv)) {
+        const eHot = mv + this.emf(type, cj);
+        const Th = this.tempFromEmf(type, eHot);
+        if (!isFinite(Th)) return { note: `EMF out of range for type ${type}.` };
+        return { rows: [
+          { label: 'Process temp', value: Th, unit: '°C', hi: true, sub: `${a.fmt(Th * 9/5 + 32)} °F · CJ ${cj} °C` },
+        ] };
+      }
+      return { note: 'Enter a process temperature (→ mV), or a measured EMF (→ temperature).' };
+    }
+  },
 };

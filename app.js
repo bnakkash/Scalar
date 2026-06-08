@@ -13,6 +13,7 @@
     precision: 6,
     perCategory: {},
     motor: {},
+    calc: {},
   };
 
   function loadState() {
@@ -58,6 +59,12 @@
     mXfmr: document.getElementById('mXfmr'),
     mZ: document.getElementById('mZ'),
     mDip: document.getElementById('mDip'),
+    // Generic calc panel
+    calcPanel: document.getElementById('calcPanel'),
+    calcInputsLabel: document.getElementById('calcInputsLabel'),
+    calcInputs: document.getElementById('calcInputs'),
+    calcResults: document.getElementById('calcResults'),
+    calcNote: document.getElementById('calcNote'),
   };
 
   function renderCategories() {
@@ -183,7 +190,7 @@
   }
 
   function recompute(animate = true) {
-    if (isMotorMode()) return;
+    if (isSpecialMode()) return;
     const raw = parseInputValue(el.fromValue.value);
     if (raw === '' || raw === '-' || raw === '.') {
       el.toValue.textContent = '—';
@@ -223,16 +230,14 @@
 
   function selectCategory(key) {
     if (key === state.category) return;
-    if (!isMotorMode()) state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
+    const oldCat = CATEGORIES[state.category];
+    if (oldCat && !oldCat.mode) state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
     state.category = key;
     renderCategories();
-    if (isMotorMode()) {
-      showMotorMode();
-    } else {
-      showConverterMode();
-      renderUnits();
-      recompute();
-    }
+    const cat = CATEGORIES[key];
+    if (cat.mode === 'motor') showMotorMode();
+    else if (cat.mode === 'calc') showCalcMode();
+    else { showConverterMode(); renderUnits(); recompute(); }
     saveState();
     haptic(8);
   }
@@ -273,7 +278,7 @@
   });
 
   el.swapBtn.addEventListener('click', () => {
-    if (isMotorMode()) return;
+    if (isSpecialMode()) return;
     const currentOut = displayToNumeric(el.toValue.textContent);
     const parsedOut = parseFloat(currentOut);
 
@@ -445,12 +450,14 @@
     restoreMotorInputs();
     el.convPanel.hidden = true;
     el.relation.hidden = true;
+    el.calcPanel.hidden = true;
     el.motorPanel.hidden = false;
     computeMotor();
   }
 
   function showConverterMode() {
     el.motorPanel.hidden = true;
+    el.calcPanel.hidden = true;
     el.convPanel.hidden = false;
     el.relation.hidden = false;
   }
@@ -573,6 +580,112 @@
     });
   });
 
+  /* ====================================================================
+     GENERIC CALCULATOR ENGINE (mode: 'calc')
+     Renders a calc's declarative `fields` into an inputs grid and shows
+     `compute()` results as rows. Reuses the motor panel's styling.
+     ==================================================================== */
+
+  function isCalcMode() {
+    const cat = CATEGORIES[state.category];
+    return !!(cat && cat.mode === 'calc');
+  }
+  function isSpecialMode() { return isMotorMode() || isCalcMode(); }
+
+  function calcVal(id) {
+    const node = document.getElementById('calc_' + id);
+    return node ? node.value : '';
+  }
+
+  function showCalcMode() {
+    const cat = CATEGORIES[state.category];
+    el.convPanel.hidden = true;
+    el.relation.hidden = true;
+    el.motorPanel.hidden = true;
+    el.calcPanel.hidden = false;
+    el.calcInputsLabel.textContent = cat.label;
+
+    const saved = (state.calc && state.calc[state.category]) || {};
+    el.calcInputs.innerHTML = '';
+    (cat.fields || []).forEach(f => {
+      const wrap = document.createElement('label');
+      wrap.className = 'm-field';
+      const lab = document.createElement('span');
+      lab.textContent = f.unit ? `${f.label} (${f.unit})` : f.label;
+      wrap.appendChild(lab);
+
+      let input;
+      if (f.type === 'select') {
+        const sp = document.createElement('span');
+        sp.className = 'm-select';
+        input = document.createElement('select');
+        (f.options || []).forEach(o => {
+          const op = document.createElement('option');
+          op.value = o.v; op.textContent = o.t;
+          input.appendChild(op);
+        });
+        sp.appendChild(input);
+        wrap.appendChild(sp);
+      } else {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        input.autocomplete = 'off';
+        input.autocapitalize = 'off';
+        input.spellcheck = false;
+        if (f.ph != null) input.placeholder = f.ph;
+        wrap.appendChild(input);
+      }
+      input.id = 'calc_' + f.id;
+      input.value = saved[f.id] != null ? saved[f.id] : (f.def != null ? f.def : '');
+
+      const evt = f.type === 'select' ? 'change' : 'input';
+      input.addEventListener(evt, () => {
+        if (!state.calc) state.calc = {};
+        if (!state.calc[state.category]) state.calc[state.category] = {};
+        state.calc[state.category][f.id] = input.value;
+        computeCalc();
+        saveState();
+      });
+      el.calcInputs.appendChild(wrap);
+    });
+
+    computeCalc();
+  }
+
+  function computeCalc() {
+    const cat = CATEGORIES[state.category];
+    const api = {
+      n: id => { const f = parseFloat((calcVal(id) || '').replace(/[,\s]/g, '')); return isFinite(f) ? f : NaN; },
+      s: id => calcVal(id) || '',
+      fmt: x => formatNum(x, 4),
+    };
+    let res = {};
+    try { res = cat.compute(api) || {}; } catch (_) { res = { note: 'Check the inputs.' }; }
+    const rows = res.rows || [];
+
+    if (rows.length) {
+      el.calcResults.innerHTML = rows.map(r => {
+        const valStr = (typeof r.value === 'number') ? formatNum(r.value, 4) : String(r.value);
+        const copy = (r.copy != null ? r.copy : valStr + (r.unit ? ' ' + r.unit : '')).replace(/"/g, '&quot;');
+        return `<button type="button" class="m-row ${r.hi ? 'hi' : ''}" data-copy="${copy}">
+            <span class="m-row-label">${r.label}</span>
+            <span class="m-row-val">${valStr}${r.unit ? `<i>${r.unit}</i>` : ''}</span>
+            ${r.sub ? `<span class="m-row-sub">${r.sub}</span>` : ''}
+          </button>`;
+      }).join('');
+      el.calcResults.querySelectorAll('.m-row').forEach(b => {
+        b.addEventListener('click', () => { copyText(b.dataset.copy); haptic(12); });
+      });
+    } else {
+      el.calcResults.innerHTML = `<div class="m-empty">${res.note || 'Enter values to calculate.'}</div>`;
+    }
+
+    const showNote = res.note && rows.length;
+    el.calcNote.innerHTML = showNote ? res.note : '';
+    el.calcNote.hidden = !showNote;
+  }
+
   function init() {
     if (!CATEGORIES || typeof CATEGORIES !== 'object') {
       el.categories.textContent = 'Failed to load unit data. Tap to reload.';
@@ -586,9 +699,10 @@
       b.classList.toggle('active', parseInt(b.dataset.prec, 10) === state.precision);
     });
     renderCategories();
-    if (isMotorMode()) {
-      showMotorMode();
-    } else {
+    const cat = CATEGORIES[state.category];
+    if (cat.mode === 'motor') showMotorMode();
+    else if (cat.mode === 'calc') showCalcMode();
+    else {
       renderUnits();
       el.fromValue.value = state.fromValue || '1';
       recompute(false);
