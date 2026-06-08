@@ -721,4 +721,140 @@ window.CATEGORIES = {
       return { note: 'Enter a process temperature (→ mV), or a measured EMF (→ temperature).' };
     }
   },
+
+  cvliq: {
+    label: 'Valve Cv (liquid)', glyph: 'Cv', mode: 'calc',
+    fields: [
+      { id: 'Q', label: 'Flow', unit: 'gpm', ph: '100' },
+      { id: 'dP', label: 'ΔP', unit: 'psi', ph: '25' },
+      { id: 'SG', label: 'Specific gravity', ph: '1.0', def: '1.0' },
+      { id: 'P1', label: 'Inlet P1', unit: 'psia', ph: 'optional' },
+      { id: 'Pv', label: 'Vapor press', unit: 'psia', ph: 'optional' },
+      { id: 'FL', label: 'Recovery FL', ph: '0.9', def: '0.9' },
+    ],
+    compute(a) {
+      const Q = a.n('Q'); let dP = a.n('dP');
+      let SG = a.n('SG'); if (!isFinite(SG) || SG <= 0) SG = 1;
+      if (!isFinite(Q) || !isFinite(dP) || dP <= 0) return { note: 'Enter flow (gpm) and pressure drop ΔP (psi).' };
+      const P1 = a.n('P1'), Pv = a.n('Pv');
+      let FL = a.n('FL'); if (!isFinite(FL)) FL = 0.9;
+      let choked = false, dPmax = NaN, note = '';
+      if (isFinite(P1) && isFinite(Pv)) {
+        const Pc = 3206;                                   // water critical pressure, psia
+        const FF = 0.96 - 0.28 * Math.sqrt(Math.max(Pv, 0) / Pc);
+        dPmax = FL * FL * (P1 - FF * Pv);
+        if (dP >= dPmax) { choked = true; dP = dPmax; }
+        note = choked ? `Choked — ΔP capped at ${a.fmt(dPmax)} psi (flashing/cavitation).`
+                      : `Not choked · chokes above ΔP ≈ ${a.fmt(dPmax)} psi.`;
+      }
+      const Cv = Q * Math.sqrt(SG / dP);
+      const rows = [
+        { label: 'Required Cv', value: Cv, unit: '', hi: true, sub: choked ? 'at choked ΔP' : '' },
+        { label: 'Required Kv', value: Cv * 0.865, unit: '' },
+      ];
+      if (choked) rows.push({ label: 'Choked ΔP', value: dPmax, unit: 'psi' });
+      return { rows, note };
+    }
+  },
+
+  cvkv: {
+    label: 'Cv ⇄ Kv', glyph: 'Kv', mode: 'calc',
+    fields: [
+      { id: 'Cv', label: 'Cv', ph: '20' },
+      { id: 'Kv', label: 'or Kv', ph: '' },
+      { id: 'dP', label: 'ΔP', unit: 'psi', ph: 'optional' },
+      { id: 'SG', label: 'Specific gravity', ph: '1.0', def: '1.0' },
+    ],
+    compute(a) {
+      let Cv = a.n('Cv'); const Kv = a.n('Kv');
+      if (!isFinite(Cv) && isFinite(Kv)) Cv = Kv / 0.865;
+      if (!isFinite(Cv)) return { note: 'Enter a Cv (or a Kv) to convert.' };
+      let SG = a.n('SG'); if (!isFinite(SG) || SG <= 0) SG = 1;
+      const dP = a.n('dP');
+      const rows = [
+        { label: 'Cv', value: Cv, unit: '', hi: true },
+        { label: 'Kv', value: Cv * 0.865, unit: '', sub: 'Kv = 0.865 × Cv' },
+      ];
+      if (isFinite(dP) && dP > 0) rows.push({ label: 'Flow at ΔP', value: Cv * Math.sqrt(dP / SG), unit: 'gpm', sub: `${a.fmt(dP)} psi, SG ${SG}` });
+      return { rows };
+    }
+  },
+
+  vchar: {
+    label: 'Valve % Travel', glyph: '%', mode: 'calc',
+    fields: [
+      { id: 'Cv', label: 'Required Cv', ph: '20' },
+      { id: 'Cvmax', label: 'Rated Cv (open)', ph: '40' },
+      { id: 'R', label: 'Rangeability', ph: '50', def: '50' },
+    ],
+    compute(a) {
+      const Cv = a.n('Cv'), Cvmax = a.n('Cvmax');
+      let R = a.n('R'); if (!isFinite(R) || R <= 1) R = 50;
+      if (!isFinite(Cv) || !isFinite(Cvmax) || Cvmax <= 0) return { note: 'Enter required Cv and the valve’s rated (full-open) Cv.' };
+      const ratio = Cv / Cvmax;
+      const lin = ratio * 100;
+      const eqp = Math.max(0, 100 * (1 + Math.log(ratio) / Math.log(R)));
+      const flag = ratio > 1 ? 'undersized — needs >100% travel' :
+                   lin < 10 ? 'throttles near seat — likely oversized' :
+                   lin > 90 ? 'little margin — near full open' : 'good control range';
+      return { rows: [
+        { label: 'Linear valve', value: Math.min(lin, 100), unit: '% open', hi: true },
+        { label: 'Equal-% valve', value: Math.min(eqp, 100), unit: '% open', sub: `R = ${R}` },
+        { label: 'Cv ratio', value: ratio, unit: '', sub: flag },
+      ] };
+    }
+  },
+
+  masignal: {
+    label: '4-20 mA Signal', glyph: 'mA', mode: 'calc',
+    fields: [
+      { id: 'mA', label: 'Current', unit: 'mA', ph: '12' },
+      { id: 'R', label: 'Sense resistor', unit: 'Ω', ph: '250', def: '250' },
+      { id: 'lrv', label: 'Value @ 4 mA', ph: '0', def: '0' },
+      { id: 'urv', label: 'Value @ 20 mA', ph: '100', def: '100' },
+    ],
+    compute(a) {
+      const mA = a.n('mA');
+      let R = a.n('R'); if (!isFinite(R)) R = 250;
+      let lrv = a.n('lrv'); if (!isFinite(lrv)) lrv = 0;
+      let urv = a.n('urv'); if (!isFinite(urv)) urv = 100;
+      if (!isFinite(mA)) return { note: 'Enter the loop current in mA (4 = 0%, 20 = 100%).' };
+      const pct = (mA - 4) / 16 * 100;
+      const val = lrv + pct / 100 * (urv - lrv);
+      const V = mA * R / 1000;
+      const note = R === 250 ? '250 Ω turns 4–20 mA into the standard 1–5 V (4 mA→1 V, 20 mA→5 V).'
+                             : `Across ${a.fmt(R)} Ω: 4 mA→${a.fmt(4*R/1000)} V, 20 mA→${a.fmt(20*R/1000)} V.`;
+      return { rows: [
+        { label: '% of span', value: pct, unit: '%', hi: true },
+        { label: 'Process value', value: val, unit: '' },
+        { label: `Voltage across ${a.fmt(R)} Ω`, value: V, unit: 'V', sub: 'V = mA × Ω ÷ 1000' },
+      ], note };
+    }
+  },
+
+  maloop: {
+    label: '4-20 mA Loop', glyph: 'LP', mode: 'calc',
+    fields: [
+      { id: 'Vs', label: 'Supply', unit: 'V', ph: '24', def: '24' },
+      { id: 'Vtx', label: 'Transmitter min', unit: 'V', ph: '12', def: '12' },
+      { id: 'R', label: 'Loop resistance', unit: 'Ω', ph: 'optional' },
+    ],
+    compute(a) {
+      let Vs = a.n('Vs'); if (!isFinite(Vs)) Vs = 24;
+      let Vtx = a.n('Vtx'); if (!isFinite(Vtx)) Vtx = 12;
+      const R = a.n('R');
+      const Rmax = (Vs - Vtx) / 0.020;                     // worst case at 20 mA
+      const rows = [
+        { label: 'Max loop resistance', value: Rmax, unit: 'Ω', hi: true, sub: `(Vs − Vtx) ÷ 20 mA` },
+      ];
+      if (isFinite(R)) {
+        const drop = 0.020 * R;
+        const left = Vs - drop;
+        const ok = left >= Vtx;
+        rows.push({ label: 'Drop at 20 mA', value: drop, unit: 'V', sub: `across ${a.fmt(R)} Ω` });
+        rows.push({ label: 'Left for transmitter', value: left, unit: 'V', sub: ok ? `OK — ≥ ${a.fmt(Vtx)} V` : `FAIL — below ${a.fmt(Vtx)} V min` });
+      }
+      return { rows, note: 'Loop works if total resistance (sense R + wire + barriers) ≤ max, so the transmitter keeps its minimum voltage at 20 mA.' };
+    }
+  },
 };
