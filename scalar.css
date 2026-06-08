@@ -645,3 +645,7 @@ body::after {
 .m-dip .bad { color: var(--danger); }
 .m-dip .sub { font-size: 12px; color: var(--muted); }
 .m-dip .sub b { color: var(--text-dim); font-weight: 600; }
+
+/* The `hidden` attribute must win over class-level display rules
+   (e.g. .conversion/.motor use display:flex, which otherwise overrides it). */
+[hidden] { display: none !important; }
