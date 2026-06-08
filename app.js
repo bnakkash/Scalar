@@ -14,6 +14,7 @@
     perCategory: {},
     motor: {},
     calc: {},
+    catGroup: 'Units',
   };
 
   function loadState() {
@@ -30,6 +31,7 @@
   }
 
   const el = {
+    catGroups: document.getElementById('catGroups'),
     categories: document.getElementById('categories'),
     fromUnit: document.getElementById('fromUnit'),
     toUnit: document.getElementById('toUnit'),
@@ -67,17 +69,66 @@
     calcNote: document.getElementById('calcNote'),
   };
 
+  // Category groups. A row of group tabs filters the pill grid to one group,
+  // so the bar stays compact. Order here defines tab + pill order.
+  const CATEGORY_GROUPS = [
+    { label: 'Units', keys: ['pressure','temperature','flow','massFlow','length','mass','volume','power','energy','force','speed','area','torque','density','angle','time','frequency','viscosity_d','viscosity_k'] },
+    { label: 'Mechanical', keys: ['pump','torquehp','pipe','heat'] },
+    { label: 'Electrical', keys: ['motor','ohms','vdrop','power3','xfmrfla','xfmrsc','xfmrvr'] },
+    { label: 'Instrument', keys: ['rtd','tc','masignal','maloop'] },
+    { label: 'Valves', keys: ['cvliq','cvkv','vchar'] },
+  ];
+
+  function groupOfCategory(key) {
+    const g = CATEGORY_GROUPS.find(g => g.keys.includes(key));
+    return g ? g.label : 'More';
+  }
+  function leftoverKeys() {
+    return Object.keys(CATEGORIES).filter(k => !CATEGORY_GROUPS.some(g => g.keys.includes(k)));
+  }
+  function groupLabels() {
+    const labels = CATEGORY_GROUPS.filter(g => g.keys.some(k => CATEGORIES[k])).map(g => g.label);
+    if (leftoverKeys().length) labels.push('More');
+    return labels;
+  }
+  function keysForGroup(label) {
+    if (label === 'More') return leftoverKeys();
+    const g = CATEGORY_GROUPS.find(g => g.label === label);
+    return g ? g.keys.filter(k => CATEGORIES[k]) : [];
+  }
+
+  function renderGroupTabs() {
+    el.catGroups.innerHTML = '';
+    groupLabels().forEach(label => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cat-group-tab' + (label === state.catGroup ? ' active' : '');
+      b.textContent = label;
+      b.addEventListener('click', () => selectGroup(label));
+      el.catGroups.appendChild(b);
+    });
+  }
+
   function renderCategories() {
     el.categories.innerHTML = '';
-    Object.entries(CATEGORIES).forEach(([key, cat]) => {
+    keysForGroup(state.catGroup).forEach(key => {
+      const cat = CATEGORIES[key];
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'cat-pill' + (key === state.category ? ' active' : '');
-      const glyph = cat.glyph || '•';
-      b.innerHTML = `<span class="glyph">${glyph}</span><span class="lbl">${cat.label}</span>`;
+      b.innerHTML = `<span class="glyph">${cat.glyph || '•'}</span><span class="lbl">${cat.label}</span>`;
       b.addEventListener('click', () => selectCategory(key));
       el.categories.appendChild(b);
     });
+  }
+
+  function selectGroup(label) {
+    if (label === state.catGroup) return;
+    state.catGroup = label;
+    renderGroupTabs();
+    renderCategories();
+    saveState();
+    haptic(6);
   }
 
   function renderUnits() {
@@ -233,6 +284,8 @@
     const oldCat = CATEGORIES[state.category];
     if (oldCat && !oldCat.mode) state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
     state.category = key;
+    state.catGroup = groupOfCategory(key);
+    renderGroupTabs();
     renderCategories();
     const cat = CATEGORIES[key];
     if (cat.mode === 'motor') showMotorMode();
@@ -695,9 +748,11 @@
     }
     loadState();
     if (!CATEGORIES[state.category]) state.category = 'pressure';
+    if (!groupLabels().includes(state.catGroup)) state.catGroup = groupOfCategory(state.category);
     document.querySelectorAll('.precision-btn').forEach(b => {
       b.classList.toggle('active', parseInt(b.dataset.prec, 10) === state.precision);
     });
+    renderGroupTabs();
     renderCategories();
     const cat = CATEGORIES[state.category];
     if (cat.mode === 'motor') showMotorMode();
