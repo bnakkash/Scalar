@@ -1115,7 +1115,9 @@ window.CATEGORIES = {
       { id: 'SGref', label: 'Wet-leg SG', ph: '1.0', def: '1.0' },
       { id: 'SGw', label: 'Sat. water SG', ph: '1.0', def: '1.0' },
       { id: 'SGs', label: 'Sat. steam SG', ph: '0', def: '0' },
-      { id: 'lvl', label: 'Level (0=center)', unit: 'in', ph: 'optional' },
+      { id: 'plc0', label: 'PLC @ 4 mA', unit: 'in', ph: '−½ span' },
+      { id: 'plc100', label: 'PLC @ 20 mA', unit: 'in', ph: '+½ span' },
+      { id: 'plcq', label: 'PLC reading', unit: 'in', ph: 'optional' },
     ],
     // Wet reference leg on HP side, variable (water) leg on LP side → reverse acting.
     // DP(inH2O) = Hl·(SGref−SGw) + L·(SGref−SGs) − h·(SGw−SGs), h = level above lower tap.
@@ -1128,19 +1130,22 @@ window.CATEGORIES = {
       const dpSpan = L * (SGw - SGs);
       const dpLow = Hl * (SGref - SGw) + L * (SGref - SGs);   // 0% level, max DP
       const dpHigh = (Hl + L) * (SGref - SGw);                // 100% level, min DP
+      let p0 = a.n('plc0'); if (!isFinite(p0)) p0 = -L / 2;    // PLC range defaults: 0 in = centerline
+      let p100 = a.n('plc100'); if (!isFinite(p100)) p100 = L / 2;
+      const q = a.n('plcq');
       const rows = [
-        { label: 'DP span', value: dpSpan, unit: 'inH₂O', hi: true, sub: 'span = L·(SGw − SGs)' },
-        { label: 'DP @ 0% (low)', value: dpLow, unit: 'inH₂O', sub: 'max DP — reverse acting' },
-        { label: 'DP @ 100% (high)', value: dpHigh, unit: 'inH₂O', sub: 'min DP = zero elevation' },
+        { label: 'DP span (instrument)', value: dpSpan, unit: 'inH₂O', hi: !isFinite(q), sub: 'L·(SGw − SGs)' },
+        { label: '4 mA · 0% low', value: p0, unit: 'in', sub: `PLC · ${a.fmt(dpLow)} inH₂O` },
+        { label: '20 mA · 100% high', value: p100, unit: 'in', sub: `PLC · ${a.fmt(dpHigh)} inH₂O` },
       ];
-      const lvl = a.n('lvl');
-      if (isFinite(lvl)) {
-        const pct = 50 + lvl / L * 100;                      // 0 in = centerline = 50%
-        const dp = dpLow - pct / 100 * dpSpan;
+      if (isFinite(q)) {
+        const denom = (p100 - p0) || 1;
+        const pct = (q - p0) / denom * 100;
         const mA = 4 + pct / 100 * 16;
-        rows.push({ label: `At ${a.fmt(lvl)} in`, value: mA, unit: 'mA', sub: `${a.fmt(pct)}% · ${a.fmt(dp)} inH₂O` });
+        const dp = dpLow - pct / 100 * dpSpan;
+        rows.push({ label: `PLC ${a.fmt(q)} in`, value: mA, unit: 'mA', hi: true, sub: `${a.fmt(pct)}% · ${a.fmt(dp)} inH₂O` });
       }
-      return { rows, note: 'Reverse acting (4 mA = low). 0 in = drum centerline = 50% = 12 mA. SGw/SGs come from steam tables at drum pressure — that shift vs a cold cal is what density comp corrects.' };
+      return { rows, note: 'Reverse acting (4 mA = low). PLC reads inches of level, instrument reads inH₂O of DP — same 0–100%, different scales. 0 in = centerline = 50% = 12 mA.' };
     }
   },
 };
