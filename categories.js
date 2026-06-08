@@ -1148,4 +1148,36 @@ window.CATEGORIES = {
       return { rows, note: 'Reverse acting (4 mA = low). PLC reads inches of level, instrument reads inH₂O of DP — same 0–100%, different scales. 0 in = centerline = 50% = 12 mA.' };
     }
   },
+
+  lvlmap: {
+    label: 'Range Map', glyph: '⇄', mode: 'calc',
+    fields: [
+      { id: 'iLo', label: 'Instrument @ 4 mA', unit: 'inH₂O', ph: '0', def: '0' },
+      { id: 'iHi', label: 'Instrument @ 20 mA', unit: 'inH₂O', ph: '30' },
+      { id: 'pLo', label: 'PLC @ 4 mA', unit: 'in', ph: '-2' },
+      { id: 'pHi', label: 'PLC @ 20 mA', unit: 'in', ph: '8' },
+      { id: 'mA', label: 'mA', unit: 'mA', ph: 'query' },
+      { id: 'iv', label: 'or Instrument', unit: 'inH₂O', ph: '' },
+      { id: 'pv', label: 'or PLC', unit: 'in', ph: '' },
+    ],
+    compute(a) {
+      const iLo = a.n('iLo'), iHi = a.n('iHi'), pLo = a.n('pLo'), pHi = a.n('pHi');
+      if (![iLo, iHi, pLo, pHi].every(isFinite)) return { note: 'Enter both ranges — instrument (inH₂O) and PLC (in) at 4 mA and 20 mA.' };
+      const mAq = a.n('mA'), iv = a.n('iv'), pv = a.n('pv');
+      let pct;
+      if (isFinite(mAq)) pct = (mAq - 4) / 16 * 100;
+      else if (isFinite(iv)) pct = (iv - iLo) / ((iHi - iLo) || 1) * 100;
+      else if (isFinite(pv)) pct = (pv - pLo) / ((pHi - pLo) || 1) * 100;
+      const rows = [
+        { label: '4 mA · 0%', value: iLo, unit: 'inH₂O', sub: `PLC ${a.fmt(pLo)} in` },
+        { label: '20 mA · 100%', value: iHi, unit: 'inH₂O', sub: `PLC ${a.fmt(pHi)} in` },
+      ];
+      if (isFinite(pct)) {
+        rows.push({ label: 'Signal', value: 4 + pct / 100 * 16, unit: 'mA', hi: true, sub: `${a.fmt(pct)}%` });
+        rows.push({ label: 'Instrument', value: iLo + pct / 100 * (iHi - iLo), unit: 'inH₂O' });
+        rows.push({ label: 'PLC', value: pLo + pct / 100 * (pHi - pLo), unit: 'in' });
+      }
+      return { rows, note: 'Maps 4–20 mA between the instrument and PLC scales. Enter an mA, an inH₂O value, or a PLC value.' };
+    }
+  },
 };
