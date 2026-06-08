@@ -857,4 +857,74 @@ window.CATEGORIES = {
       return { rows, note: 'Loop works if total resistance (sense R + wire + barriers) ≤ max, so the transmitter keeps its minimum voltage at 20 mA.' };
     }
   },
+
+  xfmrfla: {
+    label: 'Transformer FLA', glyph: 'kVA', mode: 'calc',
+    fields: [
+      { id: 'ph', label: 'Phase', type: 'select', def: '3', options: [
+        { v: '3', t: '3-phase' }, { v: '1', t: '1-phase' } ] },
+      { id: 'kVA', label: 'Rating', unit: 'kVA', ph: '75' },
+      { id: 'Vp', label: 'Primary', unit: 'V', ph: '480' },
+      { id: 'Vs', label: 'Secondary', unit: 'V', ph: '208' },
+    ],
+    compute(a) {
+      const ph = a.s('ph'); const kVA = a.n('kVA'), Vp = a.n('Vp'), Vs = a.n('Vs');
+      if (!isFinite(kVA) || kVA <= 0) return { note: 'Enter the transformer kVA and at least one voltage.' };
+      const k = ph === '1' ? 1 : Math.sqrt(3);
+      const rows = [];
+      if (isFinite(Vp) && Vp > 0) rows.push({ label: 'Primary FLA', value: kVA * 1000 / (k * Vp), unit: 'A', hi: true });
+      if (isFinite(Vs) && Vs > 0) rows.push({ label: 'Secondary FLA', value: kVA * 1000 / (k * Vs), unit: 'A', hi: !rows.length });
+      if (isFinite(Vp) && isFinite(Vs) && Vs > 0) rows.push({ label: 'Turns ratio', value: Vp / Vs, unit: ': 1', sub: `${a.fmt(Vp)} : ${a.fmt(Vs)}` });
+      if (!rows.length) return { note: 'Enter a primary or secondary voltage.' };
+      return { rows, note: `${ph === '1' ? '1' : '3'}φ · I = kVA·1000 / (${ph === '1' ? '' : '√3·'}V)` };
+    }
+  },
+
+  xfmrsc: {
+    label: 'Xfmr Fault Current', glyph: 'SC', mode: 'calc',
+    fields: [
+      { id: 'ph', label: 'Phase', type: 'select', def: '3', options: [
+        { v: '3', t: '3-phase' }, { v: '1', t: '1-phase' } ] },
+      { id: 'kVA', label: 'Rating', unit: 'kVA', ph: '75' },
+      { id: 'Vs', label: 'Secondary', unit: 'V', ph: '208' },
+      { id: 'Z', label: 'Impedance %Z', ph: '5.75', def: '5.75' },
+    ],
+    compute(a) {
+      const ph = a.s('ph'); const kVA = a.n('kVA'), Vs = a.n('Vs');
+      let Z = a.n('Z'); if (!isFinite(Z) || Z <= 0) Z = 5.75;
+      if (!isFinite(kVA) || kVA <= 0 || !isFinite(Vs) || Vs <= 0) return { note: 'Enter kVA and secondary voltage.' };
+      const k = ph === '1' ? 1 : Math.sqrt(3);
+      const Is = kVA * 1000 / (k * Vs);
+      return { rows: [
+        { label: 'Secondary FLA', value: Is, unit: 'A' },
+        { label: 'Available fault', value: Is * 100 / Z, unit: 'A', hi: true, sub: `FLA × 100 / %Z` },
+        { label: 'Short-circuit power', value: kVA * 100 / Z, unit: 'kVA' },
+      ], note: `Infinite-bus estimate (max). %Z = ${a.fmt(Z)}. Real fault is lower with finite upstream capacity.` };
+    }
+  },
+
+  xfmrvr: {
+    label: 'Xfmr Voltage Reg.', glyph: 'VR', mode: 'calc',
+    fields: [
+      { id: 'Z', label: 'Impedance %Z', ph: '5.75', def: '5.75' },
+      { id: 'xr', label: 'X/R ratio', ph: '3', def: '3' },
+      { id: 'load', label: 'Load', unit: '%', ph: '100', def: '100' },
+      { id: 'pf', label: 'Power factor', ph: '0.85', def: '0.85' },
+    ],
+    compute(a) {
+      let Z = a.n('Z'); if (!isFinite(Z) || Z <= 0) return { note: 'Enter the transformer impedance %Z.' };
+      let xr = a.n('xr'); if (!isFinite(xr) || xr < 0) xr = 3;
+      let load = a.n('load'); if (!isFinite(load)) load = 100;
+      let pf = a.n('pf'); if (!isFinite(pf)) pf = 0.85; pf = Math.min(Math.max(pf, 0), 1);
+      const pctR = Z / Math.sqrt(1 + xr * xr);
+      const pctX = pctR * xr;
+      const sinphi = Math.sqrt(Math.max(1 - pf * pf, 0));   // lagging PF
+      const VR = (load / 100) * (pctR * pf + pctX * sinphi);
+      return { rows: [
+        { label: 'Voltage regulation', value: VR, unit: '%', hi: true, sub: `at ${a.fmt(load)}% load, PF ${pf} lag` },
+        { label: 'Resistance %R', value: pctR, unit: '%' },
+        { label: 'Reactance %X', value: pctX, unit: '%' },
+      ], note: 'VR ≈ load · (%R·cosφ + %X·sinφ). Add for lagging PF (shown), subtract %X·sinφ for leading.' };
+    }
+  },
 };
