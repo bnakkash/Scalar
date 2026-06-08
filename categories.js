@@ -927,4 +927,183 @@ window.CATEGORIES = {
       ], note: 'VR ≈ load · (%R·cosφ + %X·sinφ). Add for lagging PF (shown), subtract %X·sinφ for leading.' };
     }
   },
+
+  sqrtdp: {
+    label: '√ DP Flow', glyph: '√', mode: 'calc',
+    fields: [
+      { id: 'mA', label: 'DP signal', unit: 'mA', ph: '12' },
+      { id: 'flow', label: 'or Flow', unit: '%', ph: '' },
+      { id: 'Qmax', label: 'Flow at 100%', ph: 'optional' },
+      { id: 'cut', label: 'Low-flow cutoff', unit: '%', ph: '0', def: '0' },
+    ],
+    compute(a) {
+      const mA = a.n('mA'), flowIn = a.n('flow'), Qmax = a.n('Qmax');
+      let cut = a.n('cut'); if (!isFinite(cut)) cut = 0;
+      let dpPct, flowPct, sig;
+      if (isFinite(mA)) { dpPct = Math.max((mA - 4) / 16 * 100, 0); flowPct = Math.sqrt(dpPct / 100) * 100; sig = mA; }
+      else if (isFinite(flowIn)) { flowPct = flowIn; dpPct = flowPct * flowPct / 100; sig = 4 + dpPct / 100 * 16; }
+      else return { note: 'Enter the DP signal (mA) → flow %, or a flow % → DP signal.' };
+      let cutNote = '';
+      if (flowPct < cut) { flowPct = 0; cutNote = ` · below ${a.fmt(cut)}% cutoff → 0`; }
+      const rows = [
+        { label: 'Flow', value: flowPct, unit: '%', hi: true, sub: 'flow% = √(DP%)' + cutNote },
+        { label: 'DP / signal', value: dpPct, unit: '%', sub: `${a.fmt(sig)} mA` },
+      ];
+      if (isFinite(Qmax)) rows.push({ label: 'Flow rate', value: flowPct / 100 * Qmax, unit: '' });
+      return { rows, note: 'Orifice/DP flow: signal ∝ DP ∝ flow². 50% DP = 70.7% flow.' };
+    }
+  },
+
+  dplevel: {
+    label: 'DP Level Cal', glyph: 'LT', mode: 'calc',
+    fields: [
+      { id: 'H', label: 'Level span', unit: 'in', ph: '100' },
+      { id: 'SG', label: 'Process SG', ph: '1.0', def: '1.0' },
+      { id: 'off', label: 'Zero offset', unit: 'inH₂O', ph: '0', def: '0' },
+      { id: 'L', label: 'Level point', unit: 'in', ph: 'optional' },
+    ],
+    compute(a) {
+      const H = a.n('H'); let SG = a.n('SG'); if (!isFinite(SG) || SG <= 0) SG = 1;
+      let off = a.n('off'); if (!isFinite(off)) off = 0;
+      if (!isFinite(H) || H <= 0) return { note: 'Enter the level span height (in) and process SG.' };
+      const dpSpan = H * SG;
+      const rows = [
+        { label: 'DP span', value: dpSpan, unit: 'inH₂O', hi: true, sub: 'span = height × SG' },
+        { label: 'LRV (4 mA)', value: off, unit: 'inH₂O' },
+        { label: 'URV (20 mA)', value: off + dpSpan, unit: 'inH₂O' },
+      ];
+      const L = a.n('L');
+      if (isFinite(L)) {
+        const pct = L / H * 100;
+        rows.push({ label: `At ${a.fmt(L)} in`, value: pct, unit: '% level', sub: `${a.fmt(off + L * SG)} inH₂O · ${a.fmt(4 + pct / 100 * 16)} mA` });
+      }
+      return { rows, note: 'Wet/reference leg: enter zero offset as negative = −(fill height × fill SG) for elevation.' };
+    }
+  },
+
+  rtdlead: {
+    label: 'RTD Lead Error', glyph: 'RL', mode: 'calc',
+    fields: [
+      { id: 'type', label: 'Sensor', type: 'select', def: '100', options: [
+        { v: '100', t: 'Pt100' }, { v: '500', t: 'Pt500' }, { v: '1000', t: 'Pt1000' } ] },
+      { id: 'wiring', label: 'Wiring', type: 'select', def: '2', options: [
+        { v: '2', t: '2-wire' }, { v: '3', t: '3-wire' }, { v: '4', t: '4-wire' } ] },
+      { id: 'R', label: 'Lead R (per wire)', unit: 'Ω', ph: '1' },
+    ],
+    compute(a) {
+      const R0 = parseFloat(a.s('type'));
+      const wiring = a.s('wiring');
+      const R = a.n('R');
+      if (!isFinite(R)) return { note: 'Enter the one-way lead resistance per wire (Ω).' };
+      const sens = 0.385 * R0 / 100;                       // Ω/°C (≈ Pt100 0.385)
+      const loop = 2 * R;
+      const err = wiring === '2' ? loop / sens : 0;
+      return { rows: [
+        { label: 'Temperature error', value: err, unit: '°C', hi: true, sub: wiring === '2' ? `${a.fmt(err * 9/5)} °F` : 'compensated (≈0)' },
+        { label: 'Lead loop resistance', value: loop, unit: 'Ω', sub: '2 × per-wire' },
+        { label: 'Sensitivity', value: sens, unit: 'Ω/°C' },
+      ], note: wiring === '2' ? '2-wire adds full lead resistance as error — use 3- or 4-wire to cancel it.' : '3-/4-wire cancels matched lead resistance.' };
+    }
+  },
+
+  pitot: {
+    label: 'Pitot Velocity', glyph: 'Pv', mode: 'calc',
+    fields: [
+      { id: 'dP', label: 'ΔP', unit: 'inH₂O', ph: '1' },
+      { id: 'fluid', label: 'Fluid', type: 'select', def: 'air', options: [
+        { v: 'air', t: 'Air (STP)' }, { v: 'water', t: 'Water' }, { v: 'custom', t: 'Custom ρ' } ] },
+      { id: 'rho', label: 'Density', unit: 'kg/m³', ph: 'if custom' },
+    ],
+    compute(a) {
+      const dP = a.n('dP'); const fluid = a.s('fluid');
+      let rho = fluid === 'water' ? 998 : fluid === 'custom' ? a.n('rho') : 1.204;
+      if (!isFinite(dP) || dP < 0) return { note: 'Enter the differential pressure (inH₂O).' };
+      if (!isFinite(rho) || rho <= 0) return { note: 'Enter the fluid density (kg/m³).' };
+      const dPa = dP * 248.84;
+      const v = Math.sqrt(2 * dPa / rho);                  // m/s
+      const fts = v / 0.3048;
+      return { rows: [
+        { label: 'Velocity', value: fts, unit: 'ft/s', hi: true },
+        { label: 'Velocity', value: fts * 60, unit: 'ft/min' },
+        { label: 'Velocity', value: v, unit: 'm/s' },
+      ], note: 'v = √(2ΔP/ρ). Standard air: ≈ 4005·√(inH₂O) ft/min.' };
+    }
+  },
+
+  kfactor: {
+    label: 'Meter K-factor', glyph: 'K', mode: 'calc',
+    fields: [
+      { id: 'K', label: 'K-factor', unit: 'p/gal', ph: '1000' },
+      { id: 'f', label: 'Frequency', unit: 'Hz', ph: '' },
+      { id: 'Q', label: 'Flow', unit: 'gpm', ph: '' },
+      { id: 'p', label: 'Pulse count', ph: 'optional' },
+    ],
+    compute(a) {
+      let K = a.n('K'), f = a.n('f'), Q = a.n('Q');
+      const had = { K: isFinite(K), f: isFinite(f), Q: isFinite(Q) };
+      const known = ['K','f','Q'].filter(k => had[k]);
+      if (known.length < 2) return { note: 'Enter any two of K-factor, frequency, flow (freq = K × gpm / 60).' };
+      if (had.K && had.Q) f = K * Q / 60;
+      else if (had.K && had.f) Q = f * 60 / K;
+      else if (had.f && had.Q) K = f * 60 / Q;
+      const rows = [
+        { label: 'K-factor', value: K, unit: 'p/gal', hi: !had.K },
+        { label: 'Frequency', value: f, unit: 'Hz', hi: !had.f },
+        { label: 'Flow', value: Q, unit: 'gpm', hi: !had.Q },
+      ];
+      const p = a.n('p');
+      if (isFinite(p) && isFinite(K) && K > 0) rows.push({ label: 'Total volume', value: p / K, unit: 'gal', sub: 'pulses ÷ K' });
+      return { rows };
+    }
+  },
+
+  caltable: {
+    label: 'Cal Table / Error', glyph: 'cal', mode: 'calc',
+    fields: [
+      { id: 'lrv', label: 'Value @ 4 mA', ph: '0', def: '0' },
+      { id: 'urv', label: 'Value @ 20 mA', ph: '100', def: '100' },
+      { id: 'pt', label: 'Test point', unit: '%', ph: 'optional' },
+      { id: 'meas', label: 'Measured', unit: 'mA', ph: 'optional' },
+    ],
+    compute(a) {
+      let lrv = a.n('lrv'); if (!isFinite(lrv)) lrv = 0;
+      let urv = a.n('urv'); if (!isFinite(urv)) urv = 100;
+      const pt = a.n('pt'), meas = a.n('meas');
+      if (isFinite(pt) && isFinite(meas)) {
+        const ideal = 4 + pt / 100 * 16;
+        const errMA = meas - ideal;
+        return { rows: [
+          { label: 'Ideal output', value: ideal, unit: 'mA', sub: `at ${a.fmt(pt)}%` },
+          { label: 'Measured', value: meas, unit: 'mA' },
+          { label: 'Error', value: errMA / 16 * 100, unit: '% span', hi: true, sub: `${a.fmt(errMA)} mA` },
+        ] };
+      }
+      const rows = [0, 25, 50, 75, 100].map(p => {
+        const mA = 4 + p / 100 * 16;
+        const val = lrv + p / 100 * (urv - lrv);
+        return { label: `${p}%`, value: mA, unit: 'mA', copy: `${a.fmt(mA)} mA`, sub: `${a.fmt(val)} · ${a.fmt(1 + p / 100 * 4)} V` };
+      });
+      return { rows, note: 'Enter a test % and measured mA to get as-found % of span error.' };
+    }
+  },
+
+  zn: {
+    label: 'PID Tuning (Z-N)', glyph: 'PID', mode: 'calc',
+    fields: [
+      { id: 'Ku', label: 'Ultimate gain Ku', ph: '10' },
+      { id: 'Pu', label: 'Ultimate period Pu', unit: 's', ph: '4' },
+    ],
+    compute(a) {
+      const Ku = a.n('Ku'), Pu = a.n('Pu');
+      if (!isFinite(Ku) || !isFinite(Pu)) return { note: 'Enter the ultimate gain Ku and ultimate period Pu (from a sustained oscillation).' };
+      return { rows: [
+        { label: 'P · Kp', value: 0.5 * Ku, unit: '' },
+        { label: 'PI · Kp', value: 0.45 * Ku, unit: '' },
+        { label: 'PI · Ti', value: Pu / 1.2, unit: 's' },
+        { label: 'PID · Kp', value: 0.6 * Ku, unit: '', hi: true },
+        { label: 'PID · Ti', value: Pu / 2, unit: 's', hi: true },
+        { label: 'PID · Td', value: Pu / 8, unit: 's', hi: true },
+      ], note: 'Ziegler–Nichols closed-loop (ultimate) method. Expect ~25% overshoot — detune for tighter loops.' };
+    }
+  },
 };
