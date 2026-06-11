@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="scalar.css?v=1.2.25">
+<link rel="stylesheet" href="scalar.css?v=1.2.26">
 </head>
 <body>
 <div class="app">
@@ -33,7 +33,7 @@
       </div>
       <div class="brand-text">
         <h1>Scalar</h1>
-        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.25 ↻</button></p>
+        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.26 ↻</button></p>
       </div>
     </div>
     <div class="precision" role="group" aria-label="Precision">
@@ -175,6 +175,10 @@
       <div class="card-label" id="calcInputsLabel">inputs</div>
       <div class="m-grid" id="calcInputs"></div>
     </div>
+    <div class="card motor-card" id="calcVisualCard" hidden>
+      <div class="card-label">diagram</div>
+      <div class="calc-visual" id="calcVisual"></div>
+    </div>
     <div class="card motor-card">
       <div class="card-label">result</div>
       <div class="m-results" id="calcResults"></div>
@@ -186,7 +190,7 @@
 
 <div class="toast" id="toast">copied</div>
 
-<script src="categories.js?v=1.2.25"></script>
-<script src="app.js?v=1.2.25"></script>
+<script src="categories.js?v=1.2.26"></script>
+<script src="app.js?v=1.2.26"></script>
 </body>
 </html>

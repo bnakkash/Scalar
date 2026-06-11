@@ -65,6 +65,8 @@
     calcPanel: document.getElementById('calcPanel'),
     calcInputsLabel: document.getElementById('calcInputsLabel'),
     calcInputs: document.getElementById('calcInputs'),
+    calcVisualCard: document.getElementById('calcVisualCard'),
+    calcVisual: document.getElementById('calcVisual'),
     calcResults: document.getElementById('calcResults'),
     calcNote: document.getElementById('calcNote'),
   };
@@ -718,6 +720,12 @@
     let res = {};
     try { res = cat.compute(api) || {}; } catch (_) { res = { note: 'Check the inputs.' }; }
     const rows = res.rows || [];
+
+    // Optional interactive diagram for this calc.
+    let svg = '';
+    if (typeof cat.visual === 'function') { try { svg = cat.visual(api) || ''; } catch (_) { svg = ''; } }
+    el.calcVisual.innerHTML = svg;
+    el.calcVisualCard.hidden = !svg;
 
     if (rows.length) {
       el.calcResults.innerHTML = rows.map(r => {

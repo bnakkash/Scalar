@@ -679,3 +679,7 @@ body::after {
 /* The `hidden` attribute must win over class-level display rules
    (e.g. .conversion/.motor use display:flex, which otherwise overrides it). */
 [hidden] { display: none !important; }
+
+/* ============ CALC DIAGRAM ============ */
+.calc-visual { width: 100%; }
+.calc-visual svg { display: block; width: 100%; height: auto; }

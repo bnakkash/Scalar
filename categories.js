@@ -1146,6 +1146,57 @@ window.CATEGORIES = {
         rows.push({ label: `PLC ${a.fmt(q)} in`, value: mA, unit: 'mA', hi: true, sub: `${a.fmt(pct)}% · ${a.fmt(dp)} inH₂O` });
       }
       return { rows, note: 'Reverse acting (4 mA = low). PLC reads inches of level, instrument reads inH₂O of DP — same 0–100%, different scales. 0 in = centerline = 50% = 12 mA.' };
+    },
+    visual(a) {
+      const L = a.n('L'), Hl = a.n('Hl');
+      let SGref = a.n('SGref'); if (!isFinite(SGref)) SGref = 1;
+      let SGw = a.n('SGw'); if (!isFinite(SGw)) SGw = 1;
+      let SGs = a.n('SGs'); if (!isFinite(SGs)) SGs = 0;
+      if (!isFinite(L) || L <= 0 || !isFinite(Hl)) return '';
+      const dpSpan = L * (SGw - SGs);
+      const dpLow = Hl * (SGref - SGw) + L * (SGref - SGs);
+      let p0 = a.n('plc0'); if (!isFinite(p0)) p0 = -L / 2;
+      let p100 = a.n('plc100'); if (!isFinite(p100)) p100 = L / 2;
+      const q = a.n('plcq');
+      const hasQ = isFinite(q);
+      const pct = hasQ ? (q - p0) / ((p100 - p0) || 1) * 100 : 50;
+      const cl = Math.max(0, Math.min(100, pct));
+      const top = 46, bot = 104, wy = (bot - cl / 100 * (bot - top)).toFixed(1);
+      const dp = dpLow - pct / 100 * dpSpan, mA = 4 + pct / 100 * 16;
+      const f = x => a.fmt(x);
+      return `<svg viewBox="0 0 300 348" width="100%" font-family="Archivo,system-ui,sans-serif">
+        <defs><clipPath id="drumclip"><rect x="97" y="33" width="166" height="86" rx="21"/></clipPath></defs>
+        <rect x="96" y="32" width="168" height="88" rx="22" fill="#15181c" stroke="#9ea3ad" stroke-width="1.5"/>
+        <rect x="97" y="${wy}" width="166" height="${(119 - wy).toFixed(1)}" fill="#2f6d8f" opacity="0.6" clip-path="url(#drumclip)"/>
+        <line x1="97" y1="${wy}" x2="263" y2="${wy}" stroke="#7cc6e8" stroke-width="2"/>
+        <line x1="246" y1="46" x2="262" y2="46" stroke="#6b7079" stroke-width="1"/>
+        <line x1="246" y1="104" x2="262" y2="104" stroke="#6b7079" stroke-width="1"/>
+        <text x="244" y="49" text-anchor="end" fill="#6b7079" font-size="9">100%</text>
+        <text x="244" y="107" text-anchor="end" fill="#6b7079" font-size="9">0%</text>
+        <text x="180" y="44" text-anchor="middle" fill="#9ea3ad" font-size="9" letter-spacing="1">STEAM</text>
+        <text x="180" y="114" text-anchor="middle" fill="#cfe6f2" font-size="9" letter-spacing="1">WATER</text>
+        <text x="180" y="131" text-anchor="middle" fill="#6b7079" font-size="8">↑ level → ↓ DP (reverse)</text>
+        <path d="M96 50 H72 V296" fill="none" stroke="#8a9099" stroke-width="3"/>
+        <path d="M96 106 H126 V296" fill="none" stroke="#8a9099" stroke-width="3"/>
+        <circle cx="72" cy="60" r="3" fill="#7cc6e8"/>
+        <rect x="66" y="190" width="12" height="18" fill="#141619"/>
+        <path d="M64 207 l16 -7 M64 199 l16 -7" stroke="#9ea3ad" stroke-width="1.2"/>
+        <rect x="120" y="190" width="12" height="18" fill="#141619"/>
+        <path d="M118 207 l16 -7 M118 199 l16 -7" stroke="#9ea3ad" stroke-width="1.2"/>
+        <text x="44" y="160" fill="#9ea3ad" font-size="9" transform="rotate(-90 44 160)" text-anchor="middle">wet leg · HP</text>
+        <text x="150" y="158" fill="#9ea3ad" font-size="9" transform="rotate(-90 150 158)" text-anchor="middle">variable leg · LP</text>
+        <text x="272" y="80" fill="#6b7079" font-size="9" transform="rotate(-90 272 80)" text-anchor="middle">span ${f(L)}″</text>
+        <text x="165" y="232" fill="#6b7079" font-size="9">Hl ${f(Hl)}″</text>
+        <rect x="58" y="296" width="100" height="34" rx="6" fill="#23262d" stroke="#e8b657" stroke-width="1.5"/>
+        <text x="108" y="312" text-anchor="middle" fill="#e8b657" font-size="11" font-weight="700">DP CELL</text>
+        <text x="108" y="324" text-anchor="middle" fill="#6b7079" font-size="8">grade</text>
+        <text x="72" y="293" text-anchor="middle" fill="#e06c5a" font-size="10" font-weight="700">H</text>
+        <text x="126" y="293" text-anchor="middle" fill="#7cc6e8" font-size="10" font-weight="700">L</text>
+        <line x1="30" y1="336" x2="250" y2="336" stroke="#6b7079" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="175" y="305" fill="#eef0f2" font-size="13" font-weight="600">${f(mA)} mA</text>
+        <text x="175" y="319" fill="#9ea3ad" font-size="10">${f(pct)}% · ${f(dp)} inH₂O</text>
+        <text x="175" y="331" fill="#6b7079" font-size="9">${hasQ ? 'PLC ' + f(q) + '″' : 'NWL · 50%'}</text>
+      </svg>`;
     }
   },
 
