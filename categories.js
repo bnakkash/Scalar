@@ -1157,13 +1157,18 @@ window.CATEGORIES = {
       const dpLow = Hl * (SGref - SGw) + L * (SGref - SGs);
       let p0 = a.n('plc0'); if (!isFinite(p0)) p0 = -L / 2;
       let p100 = a.n('plc100'); if (!isFinite(p100)) p100 = L / 2;
+      const span = (p100 - p0) || 1;
       const q = a.n('plcq');
       const hasQ = isFinite(q);
-      const pct = hasQ ? (q - p0) / ((p100 - p0) || 1) * 100 : 50;
-      const cl = Math.max(0, Math.min(100, pct));
-      const top = 46, bot = 104, wy = (bot - cl / 100 * (bot - top)).toFixed(1);
+      const nwlPct = (0 - p0) / span * 100;                 // where 0 in (NWL) sits in the span
+      const pct = hasQ ? (q - p0) / span * 100 : nwlPct;    // default: show water at NWL
+      const clamp = x => Math.max(0, Math.min(100, x));
+      const top = 46, bot = 104;
+      const wy = (bot - clamp(pct) / 100 * (bot - top)).toFixed(1);
+      const nwly = (bot - clamp(nwlPct) / 100 * (bot - top)).toFixed(1);
       const dp = dpLow - pct / 100 * dpSpan, mA = 4 + pct / 100 * 16;
       const f = x => a.fmt(x);
+      const devTxt = hasQ ? (f(q) + '″ ' + (q >= 0 ? 'above' : 'below') + ' NWL') : 'at NWL · 0″';
       return `<svg viewBox="0 0 300 348" width="100%" font-family="Archivo,system-ui,sans-serif">
         <defs><clipPath id="drumclip"><rect x="97" y="33" width="166" height="86" rx="21"/></clipPath></defs>
         <rect x="96" y="32" width="168" height="88" rx="22" fill="#15181c" stroke="#9ea3ad" stroke-width="1.5"/>
@@ -1171,11 +1176,15 @@ window.CATEGORIES = {
         <line x1="97" y1="${wy}" x2="263" y2="${wy}" stroke="#7cc6e8" stroke-width="2"/>
         <line x1="246" y1="46" x2="262" y2="46" stroke="#6b7079" stroke-width="1"/>
         <line x1="246" y1="104" x2="262" y2="104" stroke="#6b7079" stroke-width="1"/>
-        <text x="244" y="49" text-anchor="end" fill="#6b7079" font-size="9">100%</text>
-        <text x="244" y="107" text-anchor="end" fill="#6b7079" font-size="9">0%</text>
+        <text x="244" y="44" text-anchor="end" fill="#9ea3ad" font-size="9">${f(p100)}″</text>
+        <text x="244" y="52" text-anchor="end" fill="#6b7079" font-size="7">100%</text>
+        <text x="244" y="103" text-anchor="end" fill="#9ea3ad" font-size="9">${f(p0)}″</text>
+        <text x="244" y="111" text-anchor="end" fill="#6b7079" font-size="7">0%</text>
+        <line x1="97" y1="${nwly}" x2="263" y2="${nwly}" stroke="#e8b657" stroke-width="1.3" stroke-dasharray="5 3"/>
+        <text x="101" y="${(nwly - 3).toFixed(1)}" fill="#e8b657" font-size="9" font-weight="700">NWL 0″</text>
         <text x="180" y="44" text-anchor="middle" fill="#9ea3ad" font-size="9" letter-spacing="1">STEAM</text>
-        <text x="180" y="114" text-anchor="middle" fill="#cfe6f2" font-size="9" letter-spacing="1">WATER</text>
-        <text x="180" y="131" text-anchor="middle" fill="#6b7079" font-size="8">↑ level → ↓ DP (reverse)</text>
+        <text x="180" y="116" text-anchor="middle" fill="#cfe6f2" font-size="9" letter-spacing="1">WATER</text>
+        <text x="180" y="131" text-anchor="middle" fill="#6b7079" font-size="8">reverse · PLC = ± from NWL</text>
         <path d="M96 50 H72 V296" fill="none" stroke="#8a9099" stroke-width="3"/>
         <path d="M96 106 H126 V296" fill="none" stroke="#8a9099" stroke-width="3"/>
         <circle cx="72" cy="60" r="3" fill="#7cc6e8"/>
@@ -1195,7 +1204,7 @@ window.CATEGORIES = {
         <line x1="30" y1="336" x2="250" y2="336" stroke="#6b7079" stroke-width="1" stroke-dasharray="2 3"/>
         <text x="175" y="305" fill="#eef0f2" font-size="13" font-weight="600">${f(mA)} mA</text>
         <text x="175" y="319" fill="#9ea3ad" font-size="10">${f(pct)}% · ${f(dp)} inH₂O</text>
-        <text x="175" y="331" fill="#6b7079" font-size="9">${hasQ ? 'PLC ' + f(q) + '″' : 'NWL · 50%'}</text>
+        <text x="175" y="331" fill="#e8b657" font-size="9">${devTxt}</text>
       </svg>`;
     }
   },
