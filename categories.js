@@ -1180,4 +1180,29 @@ window.CATEGORIES = {
       return { rows, note: 'Maps 4–20 mA between the instrument and PLC scales. Enter an mA, an inH₂O value, or a PLC value.' };
     }
   },
+
+  ne43: {
+    label: 'NAMUR NE43', glyph: 'NE', mode: 'calc',
+    fields: [
+      { id: 'mA', label: 'Loop current', unit: 'mA', ph: '12' },
+      { id: 'lo', label: 'Low trip', unit: 'mA', ph: '3.8', def: '3.8' },
+      { id: 'hi', label: 'High trip', unit: 'mA', ph: '20.8', def: '20.8' },
+    ],
+    compute(a) {
+      const mA = a.n('mA');
+      let lo = a.n('lo'); if (!isFinite(lo)) lo = 3.8;
+      let hi = a.n('hi'); if (!isFinite(hi)) hi = 20.8;
+      if (!isFinite(mA)) return { note: 'Enter the loop current (mA) to check it against the interlock window.' };
+      const pct = (mA - 4) / 16 * 100;
+      const status = mA < lo ? '✕ Under-range — interlock drops'
+                   : mA > hi ? '✕ Over-range — interlock drops'
+                   : (mA < 3.8 || mA > 20.5) ? '△ Saturated (NE43 edge)'
+                   : '✓ Valid signal';
+      return { rows: [
+        { label: status, value: mA, unit: 'mA', hi: true, sub: `${a.fmt(pct)}% of span` },
+        { label: 'Margin to low trip', value: mA - lo, unit: 'mA', sub: `drops < ${a.fmt(lo)} mA` },
+        { label: 'Margin to high trip', value: hi - mA, unit: 'mA', sub: `drops > ${a.fmt(hi)} mA` },
+      ], note: 'NE43: 4–20 mA live, 3.8–20.5 usable, ≤3.6 or ≥21.0 = fault (open/short/off-scale). Outside the trip window the critical-AI interlock blocks start.' };
+    }
+  },
 };
