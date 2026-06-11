@@ -580,7 +580,7 @@ window.CATEGORIES = {
       { id: 'fluid', label: 'Fluid', type: 'select', def: 'water', options: [
         { v: 'water', t: 'Water (gpm)' }, { v: 'air', t: 'Air (cfm)' } ] },
       { id: 'flow', label: 'Flow', unit: 'gpm / cfm', ph: '50' },
-      { id: 'dT', label: 'ΔT', unit: '°F', ph: '20' },
+      { id: 'dT', label: 'ΔT', unit: '°F', ph: '20', neg: true },
     ],
     compute(a) {
       const fluid = a.s('fluid'); const flow = a.n('flow'); const dT = a.n('dT');
@@ -601,7 +601,7 @@ window.CATEGORIES = {
     fields: [
       { id: 'type', label: 'Sensor', type: 'select', def: '100', options: [
         { v: '100', t: 'Pt100 (385)' }, { v: '500', t: 'Pt500' }, { v: '1000', t: 'Pt1000' } ] },
-      { id: 'T', label: 'Temperature', unit: '°C', ph: '100' },
+      { id: 'T', label: 'Temperature', unit: '°C', ph: '100', neg: true },
       { id: 'R', label: 'or Resistance', unit: 'Ω', ph: '' },
     ],
     // Callendar–Van Dusen, IEC 60751 (α = 0.00385).
@@ -648,8 +648,8 @@ window.CATEGORIES = {
     fields: [
       { id: 'type', label: 'Type', type: 'select', def: 'K', options: [
         { v: 'K', t: 'Type K' }, { v: 'J', t: 'Type J' }, { v: 'T', t: 'Type T' }, { v: 'E', t: 'Type E' } ] },
-      { id: 'T', label: 'Process temp', unit: '°C', ph: '100' },
-      { id: 'cj', label: 'Cold junction', unit: '°C', ph: '25', def: '25' },
+      { id: 'T', label: 'Process temp', unit: '°C', ph: '100', neg: true },
+      { id: 'cj', label: 'Cold junction', unit: '°C', ph: '25', def: '25', neg: true },
       { id: 'mv', label: 'or measured EMF', unit: 'mV', ph: '' },
     ],
     // NIST ITS-90 reference functions (T in °C → EMF in mV). Horner on c0..cn.
@@ -810,8 +810,8 @@ window.CATEGORIES = {
     fields: [
       { id: 'mA', label: 'Current', unit: 'mA', ph: '12' },
       { id: 'R', label: 'Sense resistor', unit: 'Ω', ph: '250', def: '250' },
-      { id: 'lrv', label: 'Value @ 4 mA', ph: '0', def: '0' },
-      { id: 'urv', label: 'Value @ 20 mA', ph: '100', def: '100' },
+      { id: 'lrv', label: 'Value @ 4 mA', ph: '0', def: '0', neg: true },
+      { id: 'urv', label: 'Value @ 20 mA', ph: '100', def: '100', neg: true },
     ],
     compute(a) {
       const mA = a.n('mA');
@@ -959,7 +959,7 @@ window.CATEGORIES = {
     fields: [
       { id: 'H', label: 'Level span', unit: 'in', ph: '100' },
       { id: 'SG', label: 'Process SG', ph: '1.0', def: '1.0' },
-      { id: 'off', label: 'Zero offset', unit: 'inH₂O', ph: '0', def: '0' },
+      { id: 'off', label: 'Zero offset', unit: 'inH₂O', ph: '0', def: '0', neg: true },
       { id: 'L', label: 'Level point', unit: 'in', ph: 'optional' },
     ],
     compute(a) {
@@ -1060,8 +1060,8 @@ window.CATEGORIES = {
   caltable: {
     label: 'Cal Table / Error', glyph: 'cal', mode: 'calc',
     fields: [
-      { id: 'lrv', label: 'Value @ 4 mA', ph: '0', def: '0' },
-      { id: 'urv', label: 'Value @ 20 mA', ph: '100', def: '100' },
+      { id: 'lrv', label: 'Value @ 4 mA', ph: '0', def: '0', neg: true },
+      { id: 'urv', label: 'Value @ 20 mA', ph: '100', def: '100', neg: true },
       { id: 'pt', label: 'Test point', unit: '%', ph: 'optional' },
       { id: 'meas', label: 'Measured', unit: 'mA', ph: 'optional' },
     ],
@@ -1115,9 +1115,9 @@ window.CATEGORIES = {
       { id: 'SGref', label: 'Wet-leg SG', ph: '1.0', def: '1.0' },
       { id: 'SGw', label: 'Sat. water SG', ph: '1.0', def: '1.0' },
       { id: 'SGs', label: 'Sat. steam SG', ph: '0', def: '0' },
-      { id: 'plc0', label: 'PLC @ 4 mA', unit: 'in', ph: '−½ span' },
-      { id: 'plc100', label: 'PLC @ 20 mA', unit: 'in', ph: '+½ span' },
-      { id: 'plcq', label: 'PLC reading', unit: 'in', ph: 'optional' },
+      { id: 'plc0', label: 'PLC @ 4 mA', unit: 'in', ph: '−½ span', neg: true },
+      { id: 'plc100', label: 'PLC @ 20 mA', unit: 'in', ph: '+½ span', neg: true },
+      { id: 'plcq', label: 'PLC reading', unit: 'in', ph: 'optional', neg: true },
     ],
     // Wet reference leg on HP side, variable (water) leg on LP side → reverse acting.
     // DP(inH2O) = Hl·(SGref−SGw) + L·(SGref−SGs) − h·(SGw−SGs), h = level above lower tap.
@@ -1154,11 +1154,11 @@ window.CATEGORIES = {
     fields: [
       { id: 'iLo', label: 'Instrument @ 4 mA', unit: 'inH₂O', ph: '0', def: '0' },
       { id: 'iHi', label: 'Instrument @ 20 mA', unit: 'inH₂O', ph: '30' },
-      { id: 'pLo', label: 'PLC @ 4 mA', unit: 'in', ph: '-2' },
-      { id: 'pHi', label: 'PLC @ 20 mA', unit: 'in', ph: '8' },
+      { id: 'pLo', label: 'PLC @ 4 mA', unit: 'in', ph: '-2', neg: true },
+      { id: 'pHi', label: 'PLC @ 20 mA', unit: 'in', ph: '8', neg: true },
       { id: 'mA', label: 'mA', unit: 'mA', ph: 'query' },
-      { id: 'iv', label: 'or Instrument', unit: 'inH₂O', ph: '' },
-      { id: 'pv', label: 'or PLC', unit: 'in', ph: '' },
+      { id: 'iv', label: 'or Instrument', unit: 'inH₂O', ph: '', neg: true },
+      { id: 'pv', label: 'or PLC', unit: 'in', ph: '', neg: true },
     ],
     compute(a) {
       const iLo = a.n('iLo'), iHi = a.n('iHi'), pLo = a.n('pLo'), pHi = a.n('pHi');

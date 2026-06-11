@@ -682,7 +682,9 @@
       } else {
         input = document.createElement('input');
         input.type = 'text';
-        input.inputMode = 'decimal';
+        // Fields that can be negative use 'text' so the mobile keyboard
+        // includes a minus key (the decimal pad has no minus).
+        input.inputMode = f.neg ? 'text' : 'decimal';
         input.autocomplete = 'off';
         input.autocapitalize = 'off';
         input.spellcheck = false;
