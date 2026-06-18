@@ -1241,6 +1241,38 @@ window.CATEGORIES = {
     }
   },
 
+  mascale: {
+    label: '4-20 mA Scale', glyph: 'I/O', mode: 'calc',
+    fields: [
+      { id: 'lrv', label: 'Range @ 4 mA', ph: '0', def: '0', neg: true },
+      { id: 'urv', label: 'Range @ 20 mA', ph: '100', def: '100', neg: true },
+      { id: 'mA', label: 'mA', unit: 'mA', ph: 'enter one', neg: true },
+      { id: 'ev', label: 'or Value', ph: 'enter one', neg: true },
+    ],
+    compute(a) {
+      let lrv = a.n('lrv'); if (!isFinite(lrv)) lrv = 0;
+      let urv = a.n('urv'); if (!isFinite(urv)) urv = 100;
+      const span = urv - lrv;
+      const mA = a.n('mA'), ev = a.n('ev');
+      let pct = NaN;
+      if (isFinite(mA)) pct = (mA - 4) / 16 * 100;
+      else if (isFinite(ev)) pct = (ev - lrv) / (span || 1) * 100;
+      if (isFinite(pct)) {
+        return { rows: [
+          { label: 'Signal', value: 4 + pct / 100 * 16, unit: 'mA', hi: true },
+          { label: 'Engineering value', value: lrv + pct / 100 * span, unit: '' },
+          { label: '% of span', value: pct, unit: '%' },
+        ], note: `4 mA = ${a.fmt(lrv)} · 20 mA = ${a.fmt(urv)}` };
+      }
+      // No entry → show the scaling chart for the range.
+      const rows = [0, 25, 50, 75, 100].map(p => ({
+        label: `${p}%`, value: 4 + p / 100 * 16, unit: 'mA',
+        copy: `${a.fmt(4 + p / 100 * 16)} mA`, sub: `${a.fmt(lrv + p / 100 * span)}`,
+      }));
+      return { rows, note: 'Enter an mA or an engineering value to convert either direction.' };
+    }
+  },
+
   ne43: {
     label: 'NAMUR NE43', glyph: 'NE', mode: 'calc',
     fields: [

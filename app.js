@@ -77,7 +77,7 @@
     { label: 'Units', keys: ['pressure','temperature','flow','massFlow','length','mass','volume','power','energy','force','speed','area','torque','density','angle','time','frequency','viscosity_d','viscosity_k'] },
     { label: 'Mechanical', keys: ['pump','torquehp','pipe','heat'] },
     { label: 'Electrical', keys: ['motor','ohms','vdrop','power3','xfmrfla','xfmrsc','xfmrvr'] },
-    { label: 'Instrument', keys: ['rtd','tc','rtdlead','masignal','maloop','ne43','sqrtdp','dplevel','drumlevel','lvlmap','pitot','kfactor','caltable','zn'] },
+    { label: 'Instrument', keys: ['rtd','tc','rtdlead','masignal','mascale','maloop','ne43','sqrtdp','dplevel','drumlevel','lvlmap','pitot','kfactor','caltable','zn'] },
     { label: 'Valves', keys: ['cvliq','cvkv','vchar'] },
   ];
 
