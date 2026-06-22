@@ -21,7 +21,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="scalar.css?v=1.2.28">
+<link rel="stylesheet" href="scalar.css?v=1.2.29">
+<link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
 <div class="app">
@@ -33,7 +34,7 @@
       </div>
       <div class="brand-text">
         <h1>Scalar</h1>
-        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.28 ↻</button></p>
+        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.29 ↻</button></p>
       </div>
     </div>
     <div class="precision" role="group" aria-label="Precision">
@@ -44,6 +45,10 @@
     </div>
   </header>
 
+  <div class="searchbar">
+    <input id="searchInput" class="search" type="search" inputmode="search" placeholder="Search calculators…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search calculators" />
+    <button id="shareBtn" class="iconbtn" type="button" aria-label="Share link" title="Share link">⤴</button>
+  </div>
   <nav class="cat-groups" id="catGroups" aria-label="Category groups"></nav>
   <nav class="categories" id="categories" aria-label="Unit categories"></nav>
 
@@ -190,7 +195,7 @@
 
 <div class="toast" id="toast">copied</div>
 
-<script src="categories.js?v=1.2.28"></script>
-<script src="app.js?v=1.2.28"></script>
+<script src="categories.js?v=1.2.29"></script>
+<script src="app.js?v=1.2.29"></script>
 </body>
 </html>

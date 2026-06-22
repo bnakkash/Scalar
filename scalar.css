@@ -683,3 +683,40 @@ body::after {
 /* ============ CALC DIAGRAM ============ */
 .calc-visual { width: 100%; }
 .calc-visual svg { display: block; width: 100%; height: auto; }
+
+/* ============ SEARCH + SHARE ============ */
+.searchbar { display: flex; gap: 8px; margin: 0 0 10px; }
+.search {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  font-family: var(--ui);
+  font-size: 14px;
+  padding: 9px 15px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.search::placeholder { color: var(--muted); }
+.iconbtn {
+  flex-shrink: 0;
+  width: 40px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--text-dim);
+  font-size: 17px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.iconbtn:active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+/* favorite star + empty state on pills */
+.cat-pill { position: relative; }
+.cat-pill .star { position: absolute; top: 3px; right: 5px; font-size: 8px; color: var(--accent); line-height: 1; }
+.cat-pill.active .star { color: #1a1408; }
+.cat-empty { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: 12px; padding: 12px 0; }

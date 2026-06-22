@@ -15,7 +15,11 @@
     motor: {},
     calc: {},
     catGroup: 'Units',
+    favorites: [],
+    recents: [],
   };
+
+  let searchTerm = '';
 
   function loadState() {
     try {
@@ -31,6 +35,8 @@
   }
 
   const el = {
+    searchInput: document.getElementById('searchInput'),
+    shareBtn: document.getElementById('shareBtn'),
     catGroups: document.getElementById('catGroups'),
     categories: document.getElementById('categories'),
     fromUnit: document.getElementById('fromUnit'),
@@ -88,20 +94,32 @@
   function leftoverKeys() {
     return Object.keys(CATEGORIES).filter(k => !CATEGORY_GROUPS.some(g => g.keys.includes(k)));
   }
+  const FAV = '★ Fav', RECENT = 'Recent';
+  function favKeys() { return (state.favorites || []).filter(k => CATEGORIES[k]); }
+  function recentKeys() { return (state.recents || []).filter(k => CATEGORIES[k]); }
   function groupLabels() {
-    const labels = CATEGORY_GROUPS.filter(g => g.keys.some(k => CATEGORIES[k])).map(g => g.label);
+    const labels = [];
+    if (favKeys().length) labels.push(FAV);
+    if (recentKeys().length) labels.push(RECENT);
+    CATEGORY_GROUPS.forEach(g => { if (g.keys.some(k => CATEGORIES[k])) labels.push(g.label); });
     if (leftoverKeys().length) labels.push('More');
     return labels;
   }
   function keysForGroup(label) {
+    if (label === FAV) return favKeys();
+    if (label === RECENT) return recentKeys();
     if (label === 'More') return leftoverKeys();
     const g = CATEGORY_GROUPS.find(g => g.label === label);
     return g ? g.keys.filter(k => CATEGORIES[k]) : [];
   }
+  function isSpecialGroup(label) { return label === FAV || label === RECENT; }
 
   function renderGroupTabs() {
+    el.catGroups.hidden = !!searchTerm;            // hide tabs while searching
     el.catGroups.innerHTML = '';
-    groupLabels().forEach(label => {
+    const labels = groupLabels();
+    if (!labels.includes(state.catGroup)) state.catGroup = labels[0] || 'Units';
+    labels.forEach(label => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'cat-group-tab' + (label === state.catGroup ? ' active' : '');
@@ -113,15 +131,54 @@
 
   function renderCategories() {
     el.categories.innerHTML = '';
-    keysForGroup(state.catGroup).forEach(key => {
+    let keys;
+    if (searchTerm) {
+      const t = searchTerm.toLowerCase();
+      keys = Object.keys(CATEGORIES).filter(k =>
+        (CATEGORIES[k].label || '').toLowerCase().includes(t) ||
+        groupOfCategory(k).toLowerCase().includes(t));
+    } else {
+      keys = keysForGroup(state.catGroup);
+    }
+    if (!keys.length) {
+      el.categories.innerHTML = `<div class="cat-empty">${searchTerm ? 'No matches' : 'Nothing here yet'}</div>`;
+      return;
+    }
+    keys.forEach(key => {
       const cat = CATEGORIES[key];
+      const fav = (state.favorites || []).includes(key);
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'cat-pill' + (key === state.category ? ' active' : '');
-      b.innerHTML = `<span class="glyph">${cat.glyph || '•'}</span><span class="lbl">${cat.label}</span>`;
-      b.addEventListener('click', () => selectCategory(key));
+      b.className = 'cat-pill' + (key === state.category ? ' active' : '') + (fav ? ' fav' : '');
+      b.innerHTML = `<span class="glyph">${cat.glyph || '•'}</span><span class="lbl">${cat.label}</span>${fav ? '<span class="star">★</span>' : ''}`;
+      b.addEventListener('click', () => { if (b._lp) { b._lp = false; return; } selectCategory(key); });
+      // Long-press (or right-click) toggles favorite.
+      let lt;
+      b.addEventListener('touchstart', () => {
+        b._lp = false; clearTimeout(lt);
+        lt = setTimeout(() => { b._lp = true; toggleFavorite(key); }, 500);
+      }, { passive: true });
+      b.addEventListener('touchend', () => clearTimeout(lt));
+      b.addEventListener('touchmove', () => clearTimeout(lt));
+      b.addEventListener('contextmenu', (e) => { e.preventDefault(); toggleFavorite(key); });
       el.categories.appendChild(b);
     });
+  }
+
+  function toggleFavorite(key) {
+    if (!state.favorites) state.favorites = [];
+    const i = state.favorites.indexOf(key);
+    if (i >= 0) state.favorites.splice(i, 1); else state.favorites.push(key);
+    saveState();
+    renderGroupTabs();
+    renderCategories();
+    toast(i >= 0 ? 'removed from favorites' : 'favorited');
+    haptic(18);
+  }
+
+  function pushRecent(key) {
+    if (!state.recents) state.recents = [];
+    state.recents = [key, ...state.recents.filter(k => k !== key)].slice(0, 8);
   }
 
   function selectGroup(label) {
@@ -282,11 +339,14 @@
   }
 
   function selectCategory(key) {
-    if (key === state.category) return;
+    const same = key === state.category;
     const oldCat = CATEGORIES[state.category];
-    if (oldCat && !oldCat.mode) state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
+    if (oldCat && !oldCat.mode && !same) state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
+    if (searchTerm) { searchTerm = ''; el.searchInput.value = ''; }
     state.category = key;
-    state.catGroup = groupOfCategory(key);
+    pushRecent(key);
+    // Keep a special tab (Fav/Recent) active if the user is browsing one; else follow the group.
+    if (!isSpecialGroup(state.catGroup)) state.catGroup = groupOfCategory(key);
     renderGroupTabs();
     renderCategories();
     const cat = CATEGORIES[key];
@@ -749,6 +809,74 @@
     el.calcNote.hidden = !showNote;
   }
 
+  /* ====================================================================
+     SEARCH · SHARE LINKS · SERVICE WORKER
+     ==================================================================== */
+
+  el.searchInput.addEventListener('input', () => {
+    searchTerm = el.searchInput.value.trim();
+    renderGroupTabs();
+    renderCategories();
+  });
+
+  // Build a shareable URL that encodes the current category + its inputs.
+  function buildLink() {
+    const cat = CATEGORIES[state.category];
+    const params = ['c=' + encodeURIComponent(state.category)];
+    const add = (k, v) => { if (v !== '' && v != null) params.push(encodeURIComponent(k) + '=' + encodeURIComponent(v)); };
+    if (cat.mode === 'calc') {
+      const store = (state.calc && state.calc[state.category]) || {};
+      Object.keys(store).forEach(k => add(k, store[k]));
+    } else if (cat.mode === 'motor') {
+      Object.keys(state.motor || {}).forEach(k => add(k, state.motor[k]));
+    } else {
+      add('f', state.fromUnit); add('t', state.toUnit); add('v', state.fromValue);
+    }
+    return location.origin + location.pathname + '#' + params.join('&');
+  }
+
+  el.shareBtn.addEventListener('click', async () => {
+    const url = buildLink();
+    haptic(12);
+    try {
+      if (navigator.share) { await navigator.share({ title: 'Scalar', url }); return; }
+    } catch (_) { return; }            // user cancelled share sheet
+    try { await navigator.clipboard.writeText(url); toast('link copied'); }
+    catch (_) { toast('couldn’t copy'); }
+  });
+
+  // Restore state from a #c=... deep link (overrides saved state for that category).
+  function parseDeepLink() {
+    const h = location.hash.replace(/^#/, '');
+    if (!h) return;
+    const p = {};
+    h.split('&').forEach(seg => { const i = seg.indexOf('='); if (i > 0) p[decodeURIComponent(seg.slice(0, i))] = decodeURIComponent(seg.slice(i + 1)); });
+    const c = p.c;
+    if (!c || !CATEGORIES[c]) return;
+    const cat = CATEGORIES[c];
+    state.category = c;
+    if (cat.mode === 'calc') {
+      const obj = {};
+      (cat.fields || []).forEach(f => { if (p[f.id] != null) obj[f.id] = p[f.id]; });
+      if (!state.calc) state.calc = {};
+      state.calc[c] = obj;
+    } else if (cat.mode === 'motor') {
+      const obj = {};
+      MOTOR_FIELDS.forEach(k => { if (p[k] != null) obj[k] = p[k]; });
+      state.motor = obj;
+    } else {
+      if (p.f) state.fromUnit = p.f;
+      if (p.t) state.toUnit = p.t;
+      if (p.v != null) state.fromValue = p.v;
+      state.perCategory[c] = { from: state.fromUnit, to: state.toUnit };
+    }
+    if (!isSpecialGroup(state.catGroup)) state.catGroup = groupOfCategory(c);
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+
   function init() {
     if (!CATEGORIES || typeof CATEGORIES !== 'object') {
       el.categories.textContent = 'Failed to load unit data. Tap to reload.';
@@ -757,6 +885,7 @@
       return;
     }
     loadState();
+    parseDeepLink();
     if (!CATEGORIES[state.category]) state.category = 'pressure';
     if (!groupLabels().includes(state.catGroup)) state.catGroup = groupOfCategory(state.category);
     document.querySelectorAll('.precision-btn').forEach(b => {

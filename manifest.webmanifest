@@ -1,0 +1,19 @@
+{
+  "name": "Scalar — Engineering Units",
+  "short_name": "Scalar",
+  "start_url": "./scalar.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0d0f",
+  "theme_color": "#0c0d0f",
+  "description": "Engineering unit converter and field calculators.",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230c0d0f'/%3E%3Cpath d='M42 132 L90 48 L138 132 Z' fill='none' stroke='%23e8b657' stroke-width='9' stroke-linejoin='round'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
