@@ -721,8 +721,9 @@
     el.calcInputsLabel.textContent = cat.label;
 
     const saved = (state.calc && state.calc[state.category]) || {};
-    el.calcInputs.innerHTML = '';
-    (cat.fields || []).forEach(f => {
+    const fields = cat.fields || [];
+
+    const buildField = (f) => {
       const wrap = document.createElement('label');
       wrap.className = 'm-field';
       const lab = document.createElement('span');
@@ -764,8 +765,38 @@
         computeCalc();
         saveState();
       });
-      el.calcInputs.appendChild(wrap);
-    });
+      return wrap;
+    };
+
+    el.calcInputs.innerHTML = '';
+    if (fields.some(f => f.section)) {
+      // Grouped layout: contiguous fields sharing a `section` render together
+      // under a subheading, in their own auto-fitting grid.
+      el.calcInputs.className = 'm-sections';
+      let cur = null, grid = null;
+      fields.forEach(f => {
+        const sec = f.section || '';
+        if (sec !== cur) {
+          cur = sec;
+          const block = document.createElement('div');
+          block.className = 'm-section';
+          if (sec) {
+            const h = document.createElement('div');
+            h.className = 'm-section-label';
+            h.textContent = sec;
+            block.appendChild(h);
+          }
+          grid = document.createElement('div');
+          grid.className = 'm-subgrid';
+          block.appendChild(grid);
+          el.calcInputs.appendChild(block);
+        }
+        grid.appendChild(buildField(f));
+      });
+    } else {
+      el.calcInputs.className = 'm-grid';
+      fields.forEach(f => el.calcInputs.appendChild(buildField(f)));
+    }
 
     computeCalc();
   }

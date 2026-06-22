@@ -1110,14 +1110,14 @@ window.CATEGORIES = {
   drumlevel: {
     label: 'Steam Drum Level', glyph: 'SD', mode: 'calc',
     fields: [
-      { id: 'L', label: 'Level span', unit: 'in', ph: '24' },
-      { id: 'Hl', label: 'Lower tap ht', unit: 'in', ph: '480' },
-      { id: 'SGref', label: 'Wet-leg SG', ph: '1.0', def: '1.0' },
-      { id: 'SGw', label: 'Sat. water SG', ph: '1.0', def: '1.0' },
-      { id: 'SGs', label: 'Sat. steam SG', ph: '0', def: '0' },
-      { id: 'plc0', label: 'PLC @ 4 mA', unit: 'in', ph: '−½ span', neg: true },
-      { id: 'plc100', label: 'PLC @ 20 mA', unit: 'in', ph: '+½ span', neg: true },
-      { id: 'plcq', label: 'PLC reading', unit: 'in', ph: 'optional', neg: true },
+      { id: 'L', label: 'Level span', section: 'Geometry · in', ph: '24' },
+      { id: 'Hl', label: 'Lower tap ht', section: 'Geometry · in', ph: '480' },
+      { id: 'SGref', label: 'Wet leg', section: 'Density · SG', ph: '1.0', def: '1.0' },
+      { id: 'SGw', label: 'Sat. water', section: 'Density · SG', ph: '1.0', def: '1.0' },
+      { id: 'SGs', label: 'Sat. steam', section: 'Density · SG', ph: '0', def: '0' },
+      { id: 'plc0', label: '@ 4 mA', section: 'PLC range · in', ph: '−½ span', neg: true },
+      { id: 'plc100', label: '@ 20 mA', section: 'PLC range · in', ph: '+½ span', neg: true },
+      { id: 'plcq', label: 'reading', section: 'PLC range · in', ph: 'optional', neg: true },
     ],
     // Wet reference leg on HP side, variable (water) leg on LP side → reverse acting.
     // DP(inH2O) = Hl·(SGref−SGw) + L·(SGref−SGs) − h·(SGw−SGs), h = level above lower tap.
@@ -1212,13 +1212,13 @@ window.CATEGORIES = {
   lvlmap: {
     label: 'Range Map', glyph: '⇄', mode: 'calc',
     fields: [
-      { id: 'iLo', label: 'Instrument @ 4 mA', unit: 'inH₂O', ph: '0', def: '0' },
-      { id: 'iHi', label: 'Instrument @ 20 mA', unit: 'inH₂O', ph: '30' },
-      { id: 'pLo', label: 'PLC @ 4 mA', unit: 'in', ph: '-2', neg: true },
-      { id: 'pHi', label: 'PLC @ 20 mA', unit: 'in', ph: '8', neg: true },
-      { id: 'mA', label: 'mA', unit: 'mA', ph: 'query' },
-      { id: 'iv', label: 'or Instrument', unit: 'inH₂O', ph: '', neg: true },
-      { id: 'pv', label: 'or PLC', unit: 'in', ph: '', neg: true },
+      { id: 'iLo', label: '@ 4 mA', section: 'Instrument range · inH₂O', ph: '0', def: '0', neg: true },
+      { id: 'iHi', label: '@ 20 mA', section: 'Instrument range · inH₂O', ph: '30', neg: true },
+      { id: 'pLo', label: '@ 4 mA', section: 'PLC range · in', ph: '-2', neg: true },
+      { id: 'pHi', label: '@ 20 mA', section: 'PLC range · in', ph: '8', neg: true },
+      { id: 'mA', label: 'mA', section: 'Convert · enter one', ph: 'query' },
+      { id: 'iv', label: 'instrument', section: 'Convert · enter one', ph: 'inH₂O', neg: true },
+      { id: 'pv', label: 'PLC', section: 'Convert · enter one', ph: 'in', neg: true },
     ],
     compute(a) {
       const iLo = a.n('iLo'), iHi = a.n('iHi'), pLo = a.n('pLo'), pHi = a.n('pHi');
@@ -1244,10 +1244,10 @@ window.CATEGORIES = {
   mascale: {
     label: '4-20 mA Scale', glyph: 'I/O', mode: 'calc',
     fields: [
-      { id: 'lrv', label: 'Range @ 4 mA', ph: '0', def: '0', neg: true },
-      { id: 'urv', label: 'Range @ 20 mA', ph: '100', def: '100', neg: true },
-      { id: 'mA', label: 'mA', unit: 'mA', ph: 'enter one', neg: true },
-      { id: 'ev', label: 'or Value', ph: 'enter one', neg: true },
+      { id: 'lrv', label: '@ 4 mA', section: 'Engineering range', ph: '0', def: '0', neg: true },
+      { id: 'urv', label: '@ 20 mA', section: 'Engineering range', ph: '100', def: '100', neg: true },
+      { id: 'mA', label: 'mA', section: 'Convert · enter one', ph: 'enter one', neg: true },
+      { id: 'ev', label: 'value', section: 'Convert · enter one', ph: 'enter one', neg: true },
     ],
     compute(a) {
       let lrv = a.n('lrv'); if (!isFinite(lrv)) lrv = 0;

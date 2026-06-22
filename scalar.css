@@ -724,3 +724,19 @@ body::after {
 .cat-pill .star { position: absolute; top: 3px; right: 5px; font-size: 8px; color: var(--accent); line-height: 1; }
 .cat-pill.active .star { color: #1a1408; }
 .cat-empty { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: 12px; padding: 12px 0; }
+
+/* ============ CALC FIELD SECTIONS ============ */
+.m-sections { display: flex; flex-direction: column; gap: 16px; }
+.m-section { display: flex; flex-direction: column; gap: 8px; }
+.m-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.m-section-label::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
+.m-subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 10px; }
