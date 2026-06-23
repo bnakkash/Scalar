@@ -1485,23 +1485,44 @@ window.CATEGORIES = {
 
   pipesch: {
     label: 'Pipe Schedule', glyph: 'NPS', mode: 'calc',
-    formula: 'ID = OD − 2·wall',
+    formula: 'ID = OD − 2·wall · ε/D = roughness ÷ ID',
     _od: { '0.5':0.840,'0.75':1.050,'1':1.315,'1.25':1.660,'1.5':1.900,'2':2.375,'2.5':2.875,'3':3.500,'4':4.500,'6':6.625,'8':8.625 },
     _w40: { '0.5':0.109,'0.75':0.113,'1':0.133,'1.25':0.140,'1.5':0.145,'2':0.154,'2.5':0.203,'3':0.216,'4':0.237,'6':0.280,'8':0.322 },
     _w80: { '0.5':0.147,'0.75':0.154,'1':0.179,'1.25':0.191,'1.5':0.200,'2':0.218,'2.5':0.276,'3':0.300,'4':0.337,'6':0.432,'8':0.500 },
+    // cL = longitudinal, cS = shear/transverse (m/s); eps = absolute roughness (mm)
+    _mat: {
+      cs:  { t:'Carbon steel',      cL:5920, cS:3230, eps:0.045 },
+      ss:  { t:'Stainless 304/316', cL:5790, cS:3100, eps:0.015 },
+      gi:  { t:'Galvanized steel',  cL:5920, cS:3230, eps:0.15 },
+      di:  { t:'Ductile iron',      cL:5000, cS:2500, eps:0.12 },
+      ci:  { t:'Cast iron',         cL:4600, cS:2200, eps:0.26 },
+      cu:  { t:'Copper',            cL:4660, cS:2260, eps:0.0015 },
+      pvc: { t:'PVC',               cL:2395, cS:1060, eps:0.0015 },
+      pe:  { t:'HDPE / PE',         cL:2200, cS:540,  eps:0.0015 },
+    },
     fields: [
       { id: 'nps', label: 'NPS', type: 'select', def: '1', options: [{v:'0.5',t:'½"'},{v:'0.75',t:'¾"'},{v:'1',t:'1"'},{v:'1.25',t:'1¼"'},{v:'1.5',t:'1½"'},{v:'2',t:'2"'},{v:'2.5',t:'2½"'},{v:'3',t:'3"'},{v:'4',t:'4"'},{v:'6',t:'6"'},{v:'8',t:'8"'}] },
       { id: 'sch', label: 'Schedule', type: 'select', def: '40', options: [{v:'40',t:'Sch 40'},{v:'80',t:'Sch 80'}] },
+      { id: 'mat', label: 'Material', type: 'select', def: 'cs', options: [{v:'cs',t:'Carbon steel'},{v:'ss',t:'Stainless 304/316'},{v:'gi',t:'Galvanized steel'},{v:'di',t:'Ductile iron'},{v:'ci',t:'Cast iron'},{v:'cu',t:'Copper'},{v:'pvc',t:'PVC'},{v:'pe',t:'HDPE / PE'}] },
     ],
     compute(a) {
-      const nps = a.s('nps'), sch = a.s('sch');
+      const nps = a.s('nps'), sch = a.s('sch'), m = this._mat[a.s('mat')];
       const od = this._od[nps], wall = (sch === '80' ? this._w80 : this._w40)[nps];
       if (od == null || wall == null) return { note: 'Pick a pipe size and schedule.' };
       const id = od - 2 * wall, area = Math.PI / 4 * id * id;
+      const circ = Math.PI * od;            // outer circumference, in
+      const epsIn = m.eps / 25.4;           // absolute roughness, in
+      const relRough = epsIn / id;          // ε/D, dimensionless
       return { rows: [
-        { label: 'Inside dia', value: id, unit: 'in', hi: true, sub: `OD ${a.fmt(od)} · wall ${a.fmt(wall)}` },
+        { label: 'Inside dia', value: id, unit: 'in', hi: true, sub: `${a.fmt(id * 25.4)} mm` },
+        { label: 'Wall thickness', value: wall, unit: 'in', sub: `${a.fmt(wall * 25.4)} mm` },
+        { label: 'Outer circumference', value: circ, unit: 'in', sub: `${a.fmt(circ * 25.4)} mm · tape-measure entry for Flexim` },
         { label: 'Flow area', value: area, unit: 'in²', sub: `${a.fmt(area / 144)} ft²` },
-      ], note: 'ASME B36.10 steel pipe. Use this ID in Pipe Flow.' };
+        { label: 'Sound velocity · shear', value: m.cS, unit: 'm/s', sub: `clamp-on transverse wave · ${a.fmt(m.cS * 3.28084)} ft/s` },
+        { label: 'Sound velocity · long.', value: m.cL, unit: 'm/s', sub: `longitudinal · ${a.fmt(m.cL * 3.28084)} ft/s` },
+        { label: 'Roughness ε', value: m.eps, unit: 'mm', sub: `${a.fmt(epsIn)} in · ${m.t}, new/clean` },
+        { label: 'Relative ε/D', value: relRough, unit: '', sub: 'for Moody / Pipe Flow friction' },
+      ], note: 'ASME B36.10 steel pipe. Material props are textbook nominal (new/clean) — for Flexim FLUXUS clamp-on setup enter wall, OD/circumference & shear sound velocity; verify roughness against actual line condition.' };
     }
   },
 
