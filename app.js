@@ -82,6 +82,7 @@
     calcVisual: document.getElementById('calcVisual'),
     calcResults: document.getElementById('calcResults'),
     calcNote: document.getElementById('calcNote'),
+    calcFormula: document.getElementById('calcFormula'),
   };
 
   // Category groups. A row of group tabs filters the pill grid to one group,
@@ -918,6 +919,10 @@
     const showNote = res.note && rows.length;
     el.calcNote.innerHTML = showNote ? res.note : '';
     el.calcNote.hidden = !showNote;
+
+    const showFormula = cat.formula && rows.length;
+    el.calcFormula.textContent = showFormula ? 'ƒ  ' + cat.formula : '';
+    el.calcFormula.hidden = !showFormula;
   }
 
   /* ====================================================================

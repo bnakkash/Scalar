@@ -810,3 +810,14 @@ body.light {
 }
 body.light::before, body.light::after { display: none; }
 body.light { background: var(--bg); }
+
+/* formula line under calc results */
+.m-formula {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line-soft);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.01em;
+}

@@ -400,6 +400,7 @@ window.CATEGORIES = {
 
   ohms: {
     label: "Ohm's Law", glyph: 'Ω', mode: 'calc',
+    formula: 'V=I·R ;  P=V·I=I²R=V²/R',
     fields: [
       { id: 'V', label: 'Voltage', unit: 'V', ph: '120' },
       { id: 'I', label: 'Current', unit: 'A', ph: '2' },
@@ -428,6 +429,7 @@ window.CATEGORIES = {
 
   vdrop: {
     label: 'Voltage Drop', glyph: 'V', mode: 'calc',
+    formula: 'Vd = k·I·R·(L/1000)   k=2 (1φ/DC), √3 (3φ)',
     fields: [
       { id: 'sys', label: 'System', type: 'select', def: '3', options: [
         { v: '3', t: '3-phase' }, { v: '1', t: '1-phase' }, { v: 'dc', t: 'DC' } ] },
@@ -472,6 +474,7 @@ window.CATEGORIES = {
 
   power3: {
     label: '3φ Power', glyph: 'φ', mode: 'calc',
+    formula: 'kVA = √3·V·I/1000 ;  kW = kVA·PF',
     fields: [
       { id: 'sys', label: 'System', type: 'select', def: '3', options: [
         { v: '3', t: '3-phase' }, { v: '1', t: '1-phase' } ] },
@@ -498,6 +501,7 @@ window.CATEGORIES = {
 
   pump: {
     label: 'Pump Power', glyph: '⌽', mode: 'calc',
+    formula: 'WHP = Q·H·SG/3960 ;  BHP = WHP/eff',
     fields: [
       { id: 'Q', label: 'Flow', unit: 'gpm', ph: '100' },
       { id: 'H', label: 'Head', unit: 'ft', ph: '80' },
@@ -531,6 +535,7 @@ window.CATEGORIES = {
 
   torquehp: {
     label: 'Torque·HP·RPM', glyph: 'τ', mode: 'calc',
+    formula: 'HP = T·N / 5252',
     fields: [
       { id: 'T', label: 'Torque', unit: 'lb·ft', ph: '' },
       { id: 'N', label: 'Speed', unit: 'RPM', ph: '1750' },
@@ -554,6 +559,7 @@ window.CATEGORIES = {
 
   pipe: {
     label: 'Pipe Flow', glyph: 'R', mode: 'calc',
+    formula: 'v = 0.4085·Q/d² ;  Re = v·d/ν',
     fields: [
       { id: 'Q', label: 'Flow', unit: 'gpm', ph: '100' },
       { id: 'd', label: 'Inside dia', unit: 'in', ph: '2' },
@@ -576,6 +582,7 @@ window.CATEGORIES = {
 
   heat: {
     label: 'Heat Load', glyph: 'Q', mode: 'calc',
+    formula: 'Q = 500·gpm·ΔT  /  1.08·cfm·ΔT',
     fields: [
       { id: 'fluid', label: 'Fluid', type: 'select', def: 'water', options: [
         { v: 'water', t: 'Water (gpm)' }, { v: 'air', t: 'Air (cfm)' } ] },
@@ -598,6 +605,7 @@ window.CATEGORIES = {
 
   rtd: {
     label: 'RTD', glyph: 'Pt', mode: 'calc',
+    formula: 'R = R0(1 + A·T + B·T²)   (CVD)',
     models: [['Rosemount','644 · 3144P · 848T'],['Honeywell','STT3000 · STT350']],
     fields: [
       { id: 'type', label: 'Sensor', type: 'select', def: '100', options: [
@@ -646,6 +654,7 @@ window.CATEGORIES = {
 
   tc: {
     label: 'Thermocouple', glyph: 'TC', mode: 'calc',
+    formula: 'mV = E(T) − E(T_cj)   (NIST ITS-90)',
     models: [['Rosemount','644 · 3144P'],['Honeywell','STT3000 · STT350']],
     fields: [
       { id: 'type', label: 'Type', type: 'select', def: 'K', options: [
@@ -726,6 +735,7 @@ window.CATEGORIES = {
 
   cvliq: {
     label: 'Valve Cv (liquid)', glyph: 'Cv', mode: 'calc',
+    formula: 'Cv = Q·√(SG/ΔP)',
     fields: [
       { id: 'Q', label: 'Flow', unit: 'gpm', ph: '100' },
       { id: 'dP', label: 'ΔP', unit: 'psi', ph: '25' },
@@ -761,6 +771,7 @@ window.CATEGORIES = {
 
   cvkv: {
     label: 'Cv ⇄ Kv', glyph: 'Kv', mode: 'calc',
+    formula: 'Kv = 0.865·Cv',
     fields: [
       { id: 'Cv', label: 'Cv', ph: '20' },
       { id: 'Kv', label: 'or Kv', ph: '' },
@@ -784,6 +795,7 @@ window.CATEGORIES = {
 
   vchar: {
     label: 'Valve % Travel', glyph: '%', mode: 'calc',
+    formula: 'eq% = 100·(1 + ln(Cv/Cv_rated)/ln R)',
     fields: [
       { id: 'Cv', label: 'Required Cv', ph: '20' },
       { id: 'Cvmax', label: 'Rated Cv (open)', ph: '40' },
@@ -809,6 +821,7 @@ window.CATEGORIES = {
 
   cvgas: {
     label: 'Valve Cv (gas)', glyph: 'Cg', mode: 'calc',
+    formula: 'ISA gas sizing (x, Y expansion)',
     fields: [
       { id: 'Q', label: 'Flow', unit: 'scfh', section: 'Flow', ph: '10000' },
       { id: 'P1', label: 'Inlet P1', unit: 'psia', section: 'Conditions', ph: '100' },
@@ -837,6 +850,7 @@ window.CATEGORIES = {
 
   vauth: {
     label: 'Valve Authority', glyph: 'N', mode: 'calc',
+    formula: 'N = ΔP_valve / (ΔP_valve + ΔP_system)',
     fields: [
       { id: 'dpv', label: 'Valve ΔP (open)', unit: 'psi', ph: '10' },
       { id: 'dps', label: 'Rest of system ΔP', unit: 'psi', ph: '10' },
@@ -855,6 +869,7 @@ window.CATEGORIES = {
 
   masignal: {
     label: '4-20 mA Signal', glyph: 'mA', mode: 'calc',
+    formula: '% = (mA−4)/16 ;  V = mA·R/1000',
     models: [['Rosemount','3051 · 644 · 5408'],['Honeywell','ST3000 · STT3000']],
     fields: [
       { id: 'mA', label: 'Current', unit: 'mA', ph: '12' },
@@ -883,6 +898,7 @@ window.CATEGORIES = {
 
   maloop: {
     label: '4-20 mA Loop', glyph: 'LP', mode: 'calc',
+    formula: 'R_max = (Vs − Vtx) / 20 mA',
     models: [['','any 4–20 mA loop']],
     fields: [
       { id: 'Vs', label: 'Supply', unit: 'V', ph: '24', def: '24' },
@@ -905,11 +921,39 @@ window.CATEGORIES = {
         rows.push({ label: 'Left for transmitter', value: left, unit: 'V', sub: ok ? `OK — ≥ ${a.fmt(Vtx)} V` : `FAIL — below ${a.fmt(Vtx)} V min` });
       }
       return { rows, note: 'Loop works if total resistance (sense R + wire + barriers) ≤ max, so the transmitter keeps its minimum voltage at 20 mA.' };
+    },
+    visual(a) {
+      let Vs = a.n('Vs'); if (!isFinite(Vs)) Vs = 24;
+      const R = a.n('R'); const f = x => a.fmt(x);
+      const drop = isFinite(R) ? '0.02·' + f(R) + ' = ' + f(0.02 * R) + ' V' : '';
+      return `<svg viewBox="0 0 300 180" width="100%" font-family="Archivo,system-ui,sans-serif">
+        <!-- loop wires -->
+        <path d="M70 52 H120 M196 52 H236 M236 52 V96 M236 130 V150 H64 V52" fill="none" stroke="#8a9099" stroke-width="2"/>
+        <!-- power supply (left side) -->
+        <line x1="56" y1="92" x2="72" y2="92" stroke="#e8b657" stroke-width="2.5"/>
+        <line x1="60" y1="102" x2="68" y2="102" stroke="#e8b657" stroke-width="2.5"/>
+        <line x1="56" y1="112" x2="72" y2="112" stroke="#e8b657" stroke-width="2.5"/>
+        <line x1="60" y1="122" x2="68" y2="122" stroke="#e8b657" stroke-width="2.5"/>
+        <text x="48" y="108" text-anchor="end" fill="#9ea3ad" font-size="10">${f(Vs)} V</text>
+        <text x="48" y="120" text-anchor="end" fill="#6b7079" font-size="8">DC PS</text>
+        <!-- transmitter -->
+        <rect x="120" y="34" width="76" height="36" rx="6" fill="#23262d" stroke="#e8b657" stroke-width="1.5"/>
+        <text x="158" y="50" text-anchor="middle" fill="#e8b657" font-size="10" font-weight="700">TX</text>
+        <text x="158" y="63" text-anchor="middle" fill="#6b7079" font-size="8">2-wire</text>
+        <!-- sense resistor (right side) -->
+        <path d="M236 96 l10 5 l-20 8 l20 8 l-10 5" fill="none" stroke="#7cc6e8" stroke-width="2"/>
+        <text x="252" y="116" fill="#7cc6e8" font-size="10">${isFinite(R) ? f(R) + ' Ω' : 'R'}</text>
+        <text x="252" y="128" fill="#6b7079" font-size="8">DCS AI</text>
+        <!-- current arrow on bottom wire -->
+        <path d="M150 150 l-10 -5 m10 5 l-10 5" stroke="#e8b657" stroke-width="2" fill="none"/>
+        <text x="158" y="166" text-anchor="middle" fill="#e8b657" font-size="10">4–20 mA${drop ? '  ·  ' + drop : ''}</text>
+      </svg>`;
     }
   },
 
   xfmrfla: {
     label: 'Transformer FLA', glyph: 'kVA', mode: 'calc',
+    formula: 'I = kVA·1000 / (√3·V)',
     fields: [
       { id: 'ph', label: 'Phase', type: 'select', def: '3', options: [
         { v: '3', t: '3-phase' }, { v: '1', t: '1-phase' } ] },
@@ -932,6 +976,7 @@ window.CATEGORIES = {
 
   xfmrsc: {
     label: 'Xfmr Fault Current', glyph: 'SC', mode: 'calc',
+    formula: 'Isc = FLA · 100 / %Z',
     fields: [
       { id: 'ph', label: 'Phase', type: 'select', def: '3', options: [
         { v: '3', t: '3-phase' }, { v: '1', t: '1-phase' } ] },
@@ -955,6 +1000,7 @@ window.CATEGORIES = {
 
   xfmrvr: {
     label: 'Xfmr Voltage Reg.', glyph: 'VR', mode: 'calc',
+    formula: 'VR ≈ load·(%R·cosφ + %X·sinφ)',
     fields: [
       { id: 'Z', label: 'Impedance %Z', ph: '5.75', def: '5.75' },
       { id: 'xr', label: 'X/R ratio', ph: '3', def: '3' },
@@ -980,6 +1026,7 @@ window.CATEGORIES = {
 
   sqrtdp: {
     label: '√ DP Flow', glyph: '√', mode: 'calc',
+    formula: 'flow% = √(DP%)',
     models: [['Rosemount','3051SF · 3051S MV'],['Honeywell','ST3000 (DP flow)']],
     fields: [
       { id: 'mA', label: 'DP signal', unit: 'mA', ph: '12' },
@@ -1007,6 +1054,7 @@ window.CATEGORIES = {
 
   dplevel: {
     label: 'DP Level Cal', glyph: 'LT', mode: 'calc',
+    formula: 'DP = level · SG',
     models: [['Rosemount','3051 · 2051 · 1151'],['Honeywell','ST3000 · ST350']],
     fields: [
       { id: 'H', label: 'Level span', unit: 'in', ph: '100' },
@@ -1035,6 +1083,7 @@ window.CATEGORIES = {
 
   rtdlead: {
     label: 'RTD Lead Error', glyph: 'RL', mode: 'calc',
+    formula: 'err = 2·R_lead / (0.385·R0/100)',
     models: [['Rosemount','644 · 3144P'],['Honeywell','STT3000 · STT350']],
     fields: [
       { id: 'type', label: 'Sensor', type: 'select', def: '100', options: [
@@ -1056,11 +1105,33 @@ window.CATEGORIES = {
         { label: 'Lead loop resistance', value: loop, unit: 'Ω', sub: '2 × per-wire' },
         { label: 'Sensitivity', value: sens, unit: 'Ω/°C' },
       ], note: wiring === '2' ? '2-wire adds full lead resistance as error — use 3- or 4-wire to cancel it.' : '3-/4-wire cancels matched lead resistance.' };
+    },
+    visual(a) {
+      const w = parseInt(a.s('wiring'), 10) || 2;
+      const R0 = a.s('type') || '100';
+      const ys = w === 2 ? [92, 108] : w === 3 ? [86, 100, 114] : [82, 95, 105, 118];
+      const leads = ys.map(y => `<line x1="78" y1="${y}" x2="222" y2="${y}" stroke="#8a9099" stroke-width="2"/>`).join('');
+      const compd = w === 2 ? '#e06c5a' : '#7cc6e8';
+      const msg = w === 2 ? 'lead R adds to reading' : (w === 3 ? '3rd lead compensates' : 'true Kelvin — no lead error');
+      return `<svg viewBox="0 0 300 175" width="100%" font-family="Archivo,system-ui,sans-serif">
+        <!-- RTD element -->
+        <rect x="34" y="84" width="44" height="32" rx="5" fill="#23262d" stroke="#e8b657" stroke-width="1.5"/>
+        <text x="56" y="104" text-anchor="middle" fill="#e8b657" font-size="11" font-weight="700">Pt${R0}</text>
+        <text x="56" y="130" text-anchor="middle" fill="#6b7079" font-size="8">element</text>
+        <!-- leads -->
+        ${leads}
+        <text x="150" y="${ys[0] - 6}" text-anchor="middle" fill="${compd}" font-size="9">${w}-wire</text>
+        <!-- transmitter -->
+        <rect x="222" y="80" width="50" height="40" rx="6" fill="#23262d" stroke="#e8b657" stroke-width="1.5"/>
+        <text x="247" y="104" text-anchor="middle" fill="#e8b657" font-size="10" font-weight="700">TX</text>
+        <text x="150" y="150" text-anchor="middle" fill="#9ea3ad" font-size="10">${msg}</text>
+      </svg>`;
     }
   },
 
   pitot: {
     label: 'Pitot Velocity', glyph: 'Pv', mode: 'calc',
+    formula: 'v = √(2·ΔP/ρ)',
     models: [['Rosemount','3051SFA + 485'],['Honeywell','ST3000 + pitot']],
     fields: [
       { id: 'dP', label: 'ΔP', unit: 'inH₂O', ph: '1' },
@@ -1086,6 +1157,7 @@ window.CATEGORIES = {
 
   kfactor: {
     label: 'Meter K-factor', glyph: 'K', mode: 'calc',
+    formula: 'f = K · Q / 60',
     models: [['Rosemount','8800 Vortex · 8700 Mag'],['Micro Motion','ELITE · F-Series (freq out)']],
     fields: [
       { id: 'K', label: 'K-factor', unit: 'p/gal', ph: '1000' },
@@ -1114,6 +1186,7 @@ window.CATEGORIES = {
 
   coriolis: {
     label: 'Coriolis Flow', glyph: 'ṁ', mode: 'calc',
+    formula: 'Q = ṁ / ρ',
     models: [['Micro Motion', 'ELITE · F-Series · 2700/5700']],
     fields: [
       { id: 'sg', label: 'Density', unit: 'g/cm³', section: 'Fluid', ph: '1.0', def: '1.0' },
@@ -1138,6 +1211,7 @@ window.CATEGORIES = {
 
   caltable: {
     label: 'Cal Table / Error', glyph: 'cal', mode: 'calc',
+    formula: 'mA = 4 + 16·(%/100) ;  err = ΔmA/16',
     models: [['','any 4–20 mA tx']],
     fields: [
       { id: 'lrv', label: 'Value @ 4 mA', ph: '0', def: '0', neg: true },
@@ -1169,6 +1243,7 @@ window.CATEGORIES = {
 
   zn: {
     label: 'PID Tuning (Z-N)', glyph: 'PID', mode: 'calc',
+    formula: 'PID: Kp=0.6Ku, Ti=Pu/2, Td=Pu/8',
     fields: [
       { id: 'Ku', label: 'Ultimate gain Ku', ph: '10' },
       { id: 'Pu', label: 'Ultimate period Pu', unit: 's', ph: '4' },
@@ -1189,6 +1264,7 @@ window.CATEGORIES = {
 
   drumlevel: {
     label: 'Steam Drum Level', glyph: 'SD', mode: 'calc',
+    formula: 'DP = Hl(SGr−SGw) + L(SGr−SGs) − h(SGw−SGs)',
     models: [['Rosemount','3051 DP + wet leg'],['Honeywell','ST3000 DP + wet leg']],
     fields: [
       { id: 'L', label: 'Level span', section: 'Geometry · in', ph: '24' },
@@ -1292,6 +1368,7 @@ window.CATEGORIES = {
 
   lvlmap: {
     label: 'Range Map', glyph: '⇄', mode: 'calc',
+    formula: 'linear: 4–20 mA ↔ instrument ↔ PLC',
     models: [['Rosemount','3051 · 5408 · 5300'],['Honeywell','ST3000']],
     fields: [
       { id: 'iLo', label: '@ 4 mA', section: 'Instrument range · inH₂O', ph: '0', def: '0', neg: true },
@@ -1325,6 +1402,7 @@ window.CATEGORIES = {
 
   mascale: {
     label: '4-20 mA Scale', glyph: 'I/O', mode: 'calc',
+    formula: 'mA = 4 + 16·(val−LRV)/(URV−LRV)',
     models: [['Rosemount','3051 · 5408'],['Honeywell','ST3000']],
     fields: [
       { id: 'lrv', label: '@ 4 mA', section: 'Engineering range', ph: '0', def: '0', neg: true },
@@ -1358,6 +1436,7 @@ window.CATEGORIES = {
 
   ne43: {
     label: 'NAMUR NE43', glyph: 'NE', mode: 'calc',
+    formula: '4–20 live ; <3.8 or >20.5 mA = fault',
     models: [['Rosemount','3051 · 644 · 5408'],['Honeywell','ST3000 · STT3000']],
     fields: [
       { id: 'mA', label: 'Loop current', unit: 'mA', ph: '12' },
@@ -1384,6 +1463,7 @@ window.CATEGORIES = {
 
   satsteam: {
     label: 'Sat. Steam', glyph: 'St', mode: 'calc',
+    formula: 'interpolated saturated-steam table',
     // [psia, Tsat °F, ρ_water lb/ft³, ρ_steam lb/ft³] — approx ASME saturated values.
     _t: [[14.696,212.0,59.81,0.0373],[30,250.3,58.82,0.0727],[50,281.0,57.90,0.1174],[75,307.6,57.05,0.1719],[100,327.8,56.37,0.2256],[150,358.4,55.28,0.3318],[200,381.8,54.38,0.4371],[250,401.0,53.62,0.5425],[300,417.4,52.91,0.6482],[400,444.6,51.71,0.8613],[500,467.0,50.63,1.0779],[600,486.2,49.68,1.2990],[700,503.1,48.78,1.5253],[800,518.2,47.92,1.7575],[900,532.0,47.10,1.9964],[1000,544.6,46.32,2.2427],[1200,567.2,44.80,2.760],[1500,596.2,42.63,3.612],[2000,635.8,38.99,5.319]],
     fields: [ { id: 'P', label: 'Pressure', unit: 'psig', section: 'Drum / line', ph: '150' } ],
@@ -1405,6 +1485,7 @@ window.CATEGORIES = {
 
   pipesch: {
     label: 'Pipe Schedule', glyph: 'NPS', mode: 'calc',
+    formula: 'ID = OD − 2·wall',
     _od: { '0.5':0.840,'0.75':1.050,'1':1.315,'1.25':1.660,'1.5':1.900,'2':2.375,'2.5':2.875,'3':3.500,'4':4.500,'6':6.625,'8':8.625 },
     _w40: { '0.5':0.109,'0.75':0.113,'1':0.133,'1.25':0.140,'1.5':0.145,'2':0.154,'2.5':0.203,'3':0.216,'4':0.237,'6':0.280,'8':0.322 },
     _w80: { '0.5':0.147,'0.75':0.154,'1':0.179,'1.25':0.191,'1.5':0.200,'2':0.218,'2.5':0.276,'3':0.300,'4':0.337,'6':0.432,'8':0.500 },
@@ -1426,6 +1507,7 @@ window.CATEGORIES = {
 
   ampacity: {
     label: 'NEC Ampacity', glyph: 'A', mode: 'calc',
+    formula: 'NEC 310.16, 75 °C column',
     _cu: { '14':20,'12':25,'10':35,'8':50,'6':65,'4':85,'3':100,'2':115,'1':130,'1/0':150,'2/0':175,'3/0':200,'4/0':230,'250':255,'300':285,'350':310,'400':335,'500':380 },
     _al: { '12':20,'10':30,'8':40,'6':50,'4':65,'3':75,'2':90,'1':100,'1/0':120,'2/0':135,'3/0':155,'4/0':180,'250':205,'300':230,'350':250,'400':270,'500':310 },
     _sc: { '14':15,'12':20,'10':30 },
