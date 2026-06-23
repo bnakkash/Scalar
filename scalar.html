@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="scalar.css?v=1.2.35">
+<link rel="stylesheet" href="scalar.css?v=1.2.37">
 <link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
@@ -34,7 +34,7 @@
       </div>
       <div class="brand-text">
         <h1>Scalar</h1>
-        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.35 ↻</button></p>
+        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.37 ↻</button></p>
       </div>
     </div>
     <div class="precision" role="group" aria-label="Precision">
@@ -47,6 +47,7 @@
 
   <div class="searchbar">
     <input id="searchInput" class="search" type="search" inputmode="search" placeholder="Search calculators…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search calculators" />
+    <button id="themeBtn" class="iconbtn" type="button" aria-label="Toggle daylight mode" title="Daylight mode">☀</button>
     <button id="shareBtn" class="iconbtn" type="button" aria-label="Share link" title="Share link">⤴</button>
   </div>
   <nav class="cat-groups" id="catGroups" aria-label="Category groups"></nav>
@@ -186,7 +187,13 @@
       <div class="calc-visual" id="calcVisual"></div>
     </div>
     <div class="card motor-card">
-      <div class="card-label">result</div>
+      <div class="m-result-head">
+        <span class="card-label">result</span>
+        <span class="m-result-btns">
+          <button id="calcSave" class="m-mini-btn" type="button">save</button>
+          <button id="calcExport" class="m-mini-btn" type="button">copy sheet</button>
+        </span>
+      </div>
       <div class="m-results" id="calcResults"></div>
       <div class="m-note" id="calcNote" hidden></div>
     </div>
@@ -196,7 +203,7 @@
 
 <div class="toast" id="toast">copied</div>
 
-<script src="categories.js?v=1.2.35"></script>
-<script src="app.js?v=1.2.35"></script>
+<script src="categories.js?v=1.2.37"></script>
+<script src="app.js?v=1.2.37"></script>
 </body>
 </html>
