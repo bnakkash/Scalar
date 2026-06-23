@@ -720,8 +720,17 @@
     el.motorPanel.hidden = true;
     el.calcPanel.hidden = false;
     el.calcInputsLabel.textContent = cat.label;
-    if (cat.models) { el.calcModels.textContent = 'Rosemount ' + cat.models; el.calcModels.hidden = false; }
-    else { el.calcModels.textContent = ''; el.calcModels.hidden = true; }
+    el.calcModels.innerHTML = '';
+    if (cat.models) {
+      const arr = Array.isArray(cat.models) ? cat.models : [['', cat.models]];
+      arr.forEach(([brand, list]) => {
+        const c = document.createElement('span');
+        c.className = 'm-model-chip' + (brand === 'Honeywell' ? ' h' : '');
+        c.innerHTML = brand ? `<span class="brand">${brand}</span>${list}` : list;
+        el.calcModels.appendChild(c);
+      });
+      el.calcModels.hidden = false;
+    } else { el.calcModels.hidden = true; }
 
     const saved = (state.calc && state.calc[state.category]) || {};
     const fields = cat.fields || [];

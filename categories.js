@@ -598,7 +598,7 @@ window.CATEGORIES = {
 
   rtd: {
     label: 'RTD', glyph: 'Pt', mode: 'calc',
-    models: '644 · 3144P · 248 · 848T',
+    models: [['Rosemount','644 · 3144P · 848T'],['Honeywell','STT3000 · STT350']],
     fields: [
       { id: 'type', label: 'Sensor', type: 'select', def: '100', options: [
         { v: '100', t: 'Pt100 (385)' }, { v: '500', t: 'Pt500' }, { v: '1000', t: 'Pt1000' } ] },
@@ -646,7 +646,7 @@ window.CATEGORIES = {
 
   tc: {
     label: 'Thermocouple', glyph: 'TC', mode: 'calc',
-    models: '644 · 3144P · 248',
+    models: [['Rosemount','644 · 3144P'],['Honeywell','STT3000 · STT350']],
     fields: [
       { id: 'type', label: 'Type', type: 'select', def: 'K', options: [
         { v: 'K', t: 'Type K' }, { v: 'J', t: 'Type J' }, { v: 'T', t: 'Type T' }, { v: 'E', t: 'Type E' } ] },
@@ -809,7 +809,7 @@ window.CATEGORIES = {
 
   masignal: {
     label: '4-20 mA Signal', glyph: 'mA', mode: 'calc',
-    models: 'any 4–20 mA · 3051 · 644 · 5408',
+    models: [['Rosemount','3051 · 644 · 5408'],['Honeywell','ST3000 · STT3000']],
     fields: [
       { id: 'mA', label: 'Current', unit: 'mA', ph: '12' },
       { id: 'R', label: 'Sense resistor', unit: 'Ω', ph: '250', def: '250' },
@@ -837,7 +837,7 @@ window.CATEGORIES = {
 
   maloop: {
     label: '4-20 mA Loop', glyph: 'LP', mode: 'calc',
-    models: 'any 4–20 mA loop',
+    models: [['','any 4–20 mA loop']],
     fields: [
       { id: 'Vs', label: 'Supply', unit: 'V', ph: '24', def: '24' },
       { id: 'Vtx', label: 'Transmitter min', unit: 'V', ph: '12', def: '12' },
@@ -934,7 +934,7 @@ window.CATEGORIES = {
 
   sqrtdp: {
     label: '√ DP Flow', glyph: '√', mode: 'calc',
-    models: '3051SF · 3051S MultiVariable',
+    models: [['Rosemount','3051SF · 3051S MV'],['Honeywell','ST3000 (DP flow)']],
     fields: [
       { id: 'mA', label: 'DP signal', unit: 'mA', ph: '12' },
       { id: 'flow', label: 'or Flow', unit: '%', ph: '' },
@@ -961,7 +961,7 @@ window.CATEGORIES = {
 
   dplevel: {
     label: 'DP Level Cal', glyph: 'LT', mode: 'calc',
-    models: '3051 · 2051 · 1151',
+    models: [['Rosemount','3051 · 2051 · 1151'],['Honeywell','ST3000 · ST350']],
     fields: [
       { id: 'H', label: 'Level span', unit: 'in', ph: '100' },
       { id: 'SG', label: 'Process SG', ph: '1.0', def: '1.0' },
@@ -989,7 +989,7 @@ window.CATEGORIES = {
 
   rtdlead: {
     label: 'RTD Lead Error', glyph: 'RL', mode: 'calc',
-    models: '644 · 3144P (RTD wiring)',
+    models: [['Rosemount','644 · 3144P'],['Honeywell','STT3000 · STT350']],
     fields: [
       { id: 'type', label: 'Sensor', type: 'select', def: '100', options: [
         { v: '100', t: 'Pt100' }, { v: '500', t: 'Pt500' }, { v: '1000', t: 'Pt1000' } ] },
@@ -1015,7 +1015,7 @@ window.CATEGORIES = {
 
   pitot: {
     label: 'Pitot Velocity', glyph: 'Pv', mode: 'calc',
-    models: '3051SFA + 485 Annubar',
+    models: [['Rosemount','3051SFA + 485'],['Honeywell','ST3000 + pitot']],
     fields: [
       { id: 'dP', label: 'ΔP', unit: 'inH₂O', ph: '1' },
       { id: 'fluid', label: 'Fluid', type: 'select', def: 'air', options: [
@@ -1040,7 +1040,7 @@ window.CATEGORIES = {
 
   kfactor: {
     label: 'Meter K-factor', glyph: 'K', mode: 'calc',
-    models: '8800 Vortex · 8700 Magmeter',
+    models: [['Rosemount','8800 Vortex · 8700 Mag']],
     fields: [
       { id: 'K', label: 'K-factor', unit: 'p/gal', ph: '1000' },
       { id: 'f', label: 'Frequency', unit: 'Hz', ph: '' },
@@ -1068,7 +1068,7 @@ window.CATEGORIES = {
 
   caltable: {
     label: 'Cal Table / Error', glyph: 'cal', mode: 'calc',
-    models: 'any 4–20 mA tx',
+    models: [['','any 4–20 mA tx']],
     fields: [
       { id: 'lrv', label: 'Value @ 4 mA', ph: '0', def: '0', neg: true },
       { id: 'urv', label: 'Value @ 20 mA', ph: '100', def: '100', neg: true },
@@ -1119,7 +1119,7 @@ window.CATEGORIES = {
 
   drumlevel: {
     label: 'Steam Drum Level', glyph: 'SD', mode: 'calc',
-    models: '3051 DP + wet leg · 1199 seals',
+    models: [['Rosemount','3051 DP + wet leg'],['Honeywell','ST3000 DP + wet leg']],
     fields: [
       { id: 'L', label: 'Level span', section: 'Geometry · in', ph: '24' },
       { id: 'Hl', label: 'Lower tap ht', section: 'Geometry · in', ph: '480' },
@@ -1222,7 +1222,7 @@ window.CATEGORIES = {
 
   lvlmap: {
     label: 'Range Map', glyph: '⇄', mode: 'calc',
-    models: 'any tx · 3051 · 5408 · 5300',
+    models: [['Rosemount','3051 · 5408 · 5300'],['Honeywell','ST3000']],
     fields: [
       { id: 'iLo', label: '@ 4 mA', section: 'Instrument range · inH₂O', ph: '0', def: '0', neg: true },
       { id: 'iHi', label: '@ 20 mA', section: 'Instrument range · inH₂O', ph: '30', neg: true },
@@ -1255,7 +1255,7 @@ window.CATEGORIES = {
 
   mascale: {
     label: '4-20 mA Scale', glyph: 'I/O', mode: 'calc',
-    models: 'any 4–20 mA · 3051 · 5408',
+    models: [['Rosemount','3051 · 5408'],['Honeywell','ST3000']],
     fields: [
       { id: 'lrv', label: '@ 4 mA', section: 'Engineering range', ph: '0', def: '0', neg: true },
       { id: 'urv', label: '@ 20 mA', section: 'Engineering range', ph: '100', def: '100', neg: true },
@@ -1288,7 +1288,7 @@ window.CATEGORIES = {
 
   ne43: {
     label: 'NAMUR NE43', glyph: 'NE', mode: 'calc',
-    models: 'any 4–20 mA · 3051 · 644 · 5408',
+    models: [['Rosemount','3051 · 644 · 5408'],['Honeywell','ST3000 · STT3000']],
     fields: [
       { id: 'mA', label: 'Loop current', unit: 'mA', ph: '12' },
       { id: 'lo', label: 'Low trip', unit: 'mA', ph: '3.8', def: '3.8' },

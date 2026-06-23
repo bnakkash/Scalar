@@ -741,10 +741,9 @@ body::after {
 .m-section-label::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
 .m-subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 10px; }
 
-/* Rosemount model tag on instrument calcs */
-.m-models {
-  align-self: flex-start;
-  display: inline-block;
+/* Applicable-model tags (Rosemount / Honeywell) on instrument calcs */
+.m-models { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 2px; }
+.m-model-chip {
   font-family: var(--mono);
   font-size: 10px;
   font-weight: 600;
@@ -753,6 +752,7 @@ body::after {
   background: var(--accent-dim);
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 3px 10px;
-  margin: -2px 0 2px;
+  padding: 3px 9px;
 }
+.m-model-chip .brand { font-weight: 700; opacity: 0.65; margin-right: 5px; }
+.m-model-chip.h { color: #7cc6e8; background: rgba(124, 198, 232, 0.12); }
