@@ -1381,4 +1381,65 @@ window.CATEGORIES = {
       ], note: 'NE43: 4–20 mA live, 3.8–20.5 usable, ≤3.6 or ≥21.0 = fault (open/short/off-scale). Outside the trip window the critical-AI interlock blocks start.' };
     }
   },
+
+  satsteam: {
+    label: 'Sat. Steam', glyph: 'St', mode: 'calc',
+    // [psia, Tsat °F, ρ_water lb/ft³, ρ_steam lb/ft³] — approx ASME saturated values.
+    _t: [[14.696,212.0,59.81,0.0373],[30,250.3,58.82,0.0727],[50,281.0,57.90,0.1174],[75,307.6,57.05,0.1719],[100,327.8,56.37,0.2256],[150,358.4,55.28,0.3318],[200,381.8,54.38,0.4371],[250,401.0,53.62,0.5425],[300,417.4,52.91,0.6482],[400,444.6,51.71,0.8613],[500,467.0,50.63,1.0779],[600,486.2,49.68,1.2990],[700,503.1,48.78,1.5253],[800,518.2,47.92,1.7575],[900,532.0,47.10,1.9964],[1000,544.6,46.32,2.2427],[1200,567.2,44.80,2.760],[1500,596.2,42.63,3.612],[2000,635.8,38.99,5.319]],
+    fields: [ { id: 'P', label: 'Pressure', unit: 'psig', section: 'Drum / line', ph: '150' } ],
+    compute(a) {
+      const Pg = a.n('P'); if (!isFinite(Pg)) return { note: 'Enter drum / line pressure (psig).' };
+      const P = Pg + 14.696, t = this._t;
+      if (P < t[0][0] || P > t[t.length - 1][0]) return { note: `Pressure out of table range (${a.fmt(t[0][0] - 14.7)}–${a.fmt(t[t.length - 1][0] - 14.7)} psig).` };
+      let i = 0; while (i < t.length - 1 && t[i + 1][0] < P) i++;
+      const A = t[i], B = t[Math.min(i + 1, t.length - 1)];
+      const r = B[0] === A[0] ? 0 : (P - A[0]) / (B[0] - A[0]);
+      const Tsat = A[1] + r * (B[1] - A[1]), rf = A[2] + r * (B[2] - A[2]), rg = A[3] + r * (B[3] - A[3]);
+      return { rows: [
+        { label: 'Sat. temperature', value: Tsat, unit: '°F', hi: true, sub: `${a.fmt((Tsat - 32) * 5 / 9)} °C` },
+        { label: 'Water density', value: rf, unit: 'lb/ft³', sub: `SG ${a.fmt(rf / 62.4)}` },
+        { label: 'Steam density', value: rg, unit: 'lb/ft³', sub: `SG ${a.fmt(rg / 62.4)}` },
+      ], note: 'Approx. saturated-steam values — use the water/steam SG in Steam Drum Level. Verify vs official steam tables.' };
+    }
+  },
+
+  pipesch: {
+    label: 'Pipe Schedule', glyph: 'NPS', mode: 'calc',
+    _od: { '0.5':0.840,'0.75':1.050,'1':1.315,'1.25':1.660,'1.5':1.900,'2':2.375,'2.5':2.875,'3':3.500,'4':4.500,'6':6.625,'8':8.625 },
+    _w40: { '0.5':0.109,'0.75':0.113,'1':0.133,'1.25':0.140,'1.5':0.145,'2':0.154,'2.5':0.203,'3':0.216,'4':0.237,'6':0.280,'8':0.322 },
+    _w80: { '0.5':0.147,'0.75':0.154,'1':0.179,'1.25':0.191,'1.5':0.200,'2':0.218,'2.5':0.276,'3':0.300,'4':0.337,'6':0.432,'8':0.500 },
+    fields: [
+      { id: 'nps', label: 'NPS', type: 'select', def: '1', options: [{v:'0.5',t:'½"'},{v:'0.75',t:'¾"'},{v:'1',t:'1"'},{v:'1.25',t:'1¼"'},{v:'1.5',t:'1½"'},{v:'2',t:'2"'},{v:'2.5',t:'2½"'},{v:'3',t:'3"'},{v:'4',t:'4"'},{v:'6',t:'6"'},{v:'8',t:'8"'}] },
+      { id: 'sch', label: 'Schedule', type: 'select', def: '40', options: [{v:'40',t:'Sch 40'},{v:'80',t:'Sch 80'}] },
+    ],
+    compute(a) {
+      const nps = a.s('nps'), sch = a.s('sch');
+      const od = this._od[nps], wall = (sch === '80' ? this._w80 : this._w40)[nps];
+      if (od == null || wall == null) return { note: 'Pick a pipe size and schedule.' };
+      const id = od - 2 * wall, area = Math.PI / 4 * id * id;
+      return { rows: [
+        { label: 'Inside dia', value: id, unit: 'in', hi: true, sub: `OD ${a.fmt(od)} · wall ${a.fmt(wall)}` },
+        { label: 'Flow area', value: area, unit: 'in²', sub: `${a.fmt(area / 144)} ft²` },
+      ], note: 'ASME B36.10 steel pipe. Use this ID in Pipe Flow.' };
+    }
+  },
+
+  ampacity: {
+    label: 'NEC Ampacity', glyph: 'A', mode: 'calc',
+    _cu: { '14':20,'12':25,'10':35,'8':50,'6':65,'4':85,'3':100,'2':115,'1':130,'1/0':150,'2/0':175,'3/0':200,'4/0':230,'250':255,'300':285,'350':310,'400':335,'500':380 },
+    _al: { '12':20,'10':30,'8':40,'6':50,'4':65,'3':75,'2':90,'1':100,'1/0':120,'2/0':135,'3/0':155,'4/0':180,'250':205,'300':230,'350':250,'400':270,'500':310 },
+    _sc: { '14':15,'12':20,'10':30 },
+    fields: [
+      { id: 'mat', label: 'Conductor', type: 'select', def: 'cu', options: [{v:'cu',t:'Copper'},{v:'al',t:'Aluminum'}] },
+      { id: 'size', label: 'Wire size', type: 'select', def: '12', options: [{v:'14',t:'14 AWG'},{v:'12',t:'12 AWG'},{v:'10',t:'10 AWG'},{v:'8',t:'8 AWG'},{v:'6',t:'6 AWG'},{v:'4',t:'4 AWG'},{v:'3',t:'3 AWG'},{v:'2',t:'2 AWG'},{v:'1',t:'1 AWG'},{v:'1/0',t:'1/0'},{v:'2/0',t:'2/0'},{v:'3/0',t:'3/0'},{v:'4/0',t:'4/0'},{v:'250',t:'250 kcmil'},{v:'300',t:'300 kcmil'},{v:'350',t:'350 kcmil'},{v:'400',t:'400 kcmil'},{v:'500',t:'500 kcmil'}] },
+    ],
+    compute(a) {
+      const mat = a.s('mat'), size = a.s('size');
+      const amp = (mat === 'al' ? this._al : this._cu)[size];
+      if (amp == null) return { note: 'That size isn’t listed for aluminum — pick 12 AWG or larger.' };
+      const rows = [{ label: 'Ampacity (75 °C)', value: amp, unit: 'A', hi: true }];
+      if (mat === 'cu' && this._sc[size]) rows.push({ label: 'Max breaker', value: this._sc[size], unit: 'A', sub: 'NEC 240.4(D) small-conductor' });
+      return { rows, note: 'NEC 310.16, 75 °C column, ≤3 current-carrying, 30 °C ambient. Apply ambient/fill derates & verify code edition.' };
+    }
+  },
 };

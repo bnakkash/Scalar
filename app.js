@@ -92,6 +92,7 @@
     { label: 'Electrical', keys: ['motor','ohms','vdrop','power3','xfmrfla','xfmrsc','xfmrvr'] },
     { label: 'Instrument', keys: ['rtd','tc','rtdlead','masignal','mascale','maloop','ne43','sqrtdp','dplevel','drumlevel','lvlmap','pitot','kfactor','coriolis','caltable','zn'] },
     { label: 'Valves', keys: ['cvliq','cvgas','cvkv','vchar','vauth'] },
+    { label: 'Reference', keys: ['satsteam','pipesch','ampacity'] },
   ];
 
   function groupOfCategory(key) {
