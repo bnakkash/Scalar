@@ -1040,7 +1040,7 @@ window.CATEGORIES = {
 
   kfactor: {
     label: 'Meter K-factor', glyph: 'K', mode: 'calc',
-    models: [['Rosemount','8800 Vortex · 8700 Mag']],
+    models: [['Rosemount','8800 Vortex · 8700 Mag'],['Micro Motion','ELITE · F-Series (freq out)']],
     fields: [
       { id: 'K', label: 'K-factor', unit: 'p/gal', ph: '1000' },
       { id: 'f', label: 'Frequency', unit: 'Hz', ph: '' },
@@ -1063,6 +1063,30 @@ window.CATEGORIES = {
       const p = a.n('p');
       if (isFinite(p) && isFinite(K) && K > 0) rows.push({ label: 'Total volume', value: p / K, unit: 'gal', sub: 'pulses ÷ K' });
       return { rows };
+    }
+  },
+
+  coriolis: {
+    label: 'Coriolis Flow', glyph: 'ṁ', mode: 'calc',
+    models: [['Micro Motion', 'ELITE · F-Series · 2700/5700']],
+    fields: [
+      { id: 'sg', label: 'Density', unit: 'g/cm³', section: 'Fluid', ph: '1.0', def: '1.0' },
+      { id: 'mass', label: 'Mass flow', unit: 'lb/min', section: 'Flow · enter one', ph: '' },
+      { id: 'vol', label: 'or Volume', unit: 'gpm', section: 'Flow · enter one', ph: '' },
+    ],
+    compute(a) {
+      let sg = a.n('sg'); if (!isFinite(sg) || sg <= 0) sg = 1;
+      const lbGal = 8.3454 * sg;                       // lb per gallon at this SG
+      const mass = a.n('mass'), vol = a.n('vol');
+      let m, v, hiM = false, hiV = false;
+      if (isFinite(mass)) { m = mass; v = mass / lbGal; hiV = true; }
+      else if (isFinite(vol)) { v = vol; m = vol * lbGal; hiM = true; }
+      else return { note: 'Enter a mass flow (lb/min) or a volume flow (gpm) — density relates them.' };
+      return { rows: [
+        { label: 'Mass flow', value: m, unit: 'lb/min', hi: hiM, sub: `${a.fmt(m * 27.2155)} kg/h` },
+        { label: 'Volume flow', value: v, unit: 'gpm', hi: hiV, sub: `${a.fmt(v * 0.227125)} m³/h` },
+        { label: 'Density', value: sg, unit: 'g/cm³', sub: `${a.fmt(sg * 62.428)} lb/ft³` },
+      ], note: 'Q = ṁ / ρ. A Coriolis meter measures mass flow and density directly.' };
     }
   },
 
