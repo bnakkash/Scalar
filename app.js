@@ -85,7 +85,7 @@
     { label: 'Mechanical', keys: ['pump','torquehp','pipe','heat'] },
     { label: 'Electrical', keys: ['motor','ohms','vdrop','power3','xfmrfla','xfmrsc','xfmrvr'] },
     { label: 'Instrument', keys: ['rtd','tc','rtdlead','masignal','mascale','maloop','ne43','sqrtdp','dplevel','drumlevel','lvlmap','pitot','kfactor','coriolis','caltable','zn'] },
-    { label: 'Valves', keys: ['cvliq','cvkv','vchar'] },
+    { label: 'Valves', keys: ['cvliq','cvgas','cvkv','vchar','vauth'] },
   ];
 
   function groupOfCategory(key) {

@@ -807,6 +807,52 @@ window.CATEGORIES = {
     }
   },
 
+  cvgas: {
+    label: 'Valve Cv (gas)', glyph: 'Cg', mode: 'calc',
+    fields: [
+      { id: 'Q', label: 'Flow', unit: 'scfh', section: 'Flow', ph: '10000' },
+      { id: 'P1', label: 'Inlet P1', unit: 'psia', section: 'Conditions', ph: '100' },
+      { id: 'dP', label: 'ΔP', unit: 'psi', section: 'Conditions', ph: '10' },
+      { id: 'G', label: 'Gas SG', unit: 'air=1', section: 'Conditions', ph: '1.0', def: '1.0' },
+      { id: 'T', label: 'Inlet temp', unit: '°F', section: 'Conditions', ph: '60', def: '60' },
+      { id: 'xT', label: 'xT factor', section: 'Conditions', ph: '0.7', def: '0.7' },
+    ],
+    compute(a) {
+      const Q = a.n('Q'), P1 = a.n('P1'), dP = a.n('dP');
+      let G = a.n('G'); if (!isFinite(G) || G <= 0) G = 1;
+      let T = a.n('T'); if (!isFinite(T)) T = 60;
+      let xT = a.n('xT'); if (!isFinite(xT) || xT <= 0) xT = 0.7;
+      if (!isFinite(Q) || !isFinite(P1) || P1 <= 0 || !isFinite(dP) || dP <= 0) return { note: 'Enter flow (scfh), inlet P1 (psia) and ΔP (psi).' };
+      let x = dP / P1, choked = false;
+      if (x >= xT) { x = xT; choked = true; }
+      const Y = 1 - x / (3 * xT);
+      const Cv = Q / (1360 * P1 * Y) * Math.sqrt(G * (T + 460) / x);
+      return { rows: [
+        { label: 'Required Cv', value: Cv, unit: '', hi: true, sub: choked ? 'choked — x capped at xT' : '' },
+        { label: 'Pressure ratio x', value: dP / P1, unit: '', sub: `xT = ${a.fmt(xT)}` },
+        { label: 'Expansion factor Y', value: Y, unit: '' },
+      ], note: 'Simplified ISA gas sizing (Z=1): Cv = Q / (1360·P1·Y·√(x/(G·T_°R))). Verify vs vendor software for critical service.' };
+    }
+  },
+
+  vauth: {
+    label: 'Valve Authority', glyph: 'N', mode: 'calc',
+    fields: [
+      { id: 'dpv', label: 'Valve ΔP (open)', unit: 'psi', ph: '10' },
+      { id: 'dps', label: 'Rest of system ΔP', unit: 'psi', ph: '10' },
+    ],
+    compute(a) {
+      const dpv = a.n('dpv'), dps = a.n('dps');
+      if (!isFinite(dpv) || dpv < 0 || !isFinite(dps) || dps < 0) return { note: 'Enter the valve ΔP (fully open) and the rest-of-system ΔP at full flow.' };
+      const N = dpv / (dpv + dps || 1);
+      const verdict = N >= 0.5 ? 'good — near-linear installed char.' : N >= 0.25 ? 'acceptable' : 'low — valve loses authority';
+      return { rows: [
+        { label: 'Authority N', value: N, unit: '', hi: true, sub: verdict },
+        { label: 'Valve ΔP share', value: N * 100, unit: '%', sub: 'of total at full flow' },
+      ], note: 'N = ΔP_valve / (ΔP_valve + ΔP_system) at full flow. Aim for ≥ 0.25–0.5.' };
+    }
+  },
+
   masignal: {
     label: '4-20 mA Signal', glyph: 'mA', mode: 'calc',
     models: [['Rosemount','3051 · 644 · 5408'],['Honeywell','ST3000 · STT3000']],
