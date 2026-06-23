@@ -70,6 +70,7 @@
     // Generic calc panel
     calcPanel: document.getElementById('calcPanel'),
     calcInputsLabel: document.getElementById('calcInputsLabel'),
+    calcModels: document.getElementById('calcModels'),
     calcInputs: document.getElementById('calcInputs'),
     calcVisualCard: document.getElementById('calcVisualCard'),
     calcVisual: document.getElementById('calcVisual'),
@@ -719,6 +720,8 @@
     el.motorPanel.hidden = true;
     el.calcPanel.hidden = false;
     el.calcInputsLabel.textContent = cat.label;
+    if (cat.models) { el.calcModels.textContent = 'Rosemount ' + cat.models; el.calcModels.hidden = false; }
+    else { el.calcModels.textContent = ''; el.calcModels.hidden = true; }
 
     const saved = (state.calc && state.calc[state.category]) || {};
     const fields = cat.fields || [];

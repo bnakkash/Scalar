@@ -740,3 +740,19 @@ body::after {
 }
 .m-section-label::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
 .m-subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 10px; }
+
+/* Rosemount model tag on instrument calcs */
+.m-models {
+  align-self: flex-start;
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin: -2px 0 2px;
+}
