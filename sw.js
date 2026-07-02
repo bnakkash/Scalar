@@ -1,8 +1,16 @@
 /* Scalar service worker — offline support.
    HTML is network-first (so updates land when online); versioned assets
    (?v=) are cache-first. After one online load the app works fully offline. */
-const CACHE = 'scalar-cache-v1';
-const CORE = ['./scalar.html'];
+const CACHE = 'scalar-cache-v1.2.42';
+// Precache the shell + versioned split assets so the very first offline reload
+// (SW registers on window.load, after these are first fetched) still has CSS/JS.
+// Keep the ?v= in sync with scalar.html on every release.
+const CORE = [
+  './scalar.html',
+  './scalar.css?v=1.2.42',
+  './categories.js?v=1.2.42',
+  './app.js?v=1.2.42',
+];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -35,7 +43,7 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
       caches.match(req).then(m => m || fetch(req).then(r => {
         const cp = r.clone(); caches.open(CACHE).then(c => c.put(req, cp)); return r;
-      }).catch(() => m))
+      }).catch(() => new Response('', { status: 503, statusText: 'Offline' })))
     );
   }
 });

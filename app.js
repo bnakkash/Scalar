@@ -511,12 +511,20 @@
       await navigator.clipboard.writeText(text);
       toast('copied ' + text);
     } catch (_) {
-      const r = document.createRange();
-      r.selectNode(el.toValue);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(r);
-      try { document.execCommand('copy'); toast('copied'); } catch (_) {}
-      window.getSelection().removeAllRanges();
+      // Fallback for browsers without navigator.clipboard: copy the actual
+      // `text` via a temporary element (not el.toValue, which may be stale).
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        toast('copied');
+      } catch (_) {}
     }
   }
 
@@ -599,11 +607,14 @@
   }
 
   // Round amps: whole numbers ≥100, one decimal below.
-  function fmtAmps(n) {
+  // Round to whole above 100, else 0.1 — used for amps, and (via fmtAmps) any
+  // large-magnitude engineering quantity like volts/kVA.
+  function fmtRound(n) {
     if (!isFinite(n)) return '—';
     const r = n >= 100 ? Math.round(n) : Math.round(n * 10) / 10;
     return r.toLocaleString('en-US');
   }
+  function fmtAmps(n) { return fmtRound(n); }
   function rangeAmps(lo, hi) {
     const a = fmtAmps(lo), b = fmtAmps(hi);
     return a === b ? a : a + ' – ' + b;
@@ -747,9 +758,9 @@
 
     el.mDip.innerHTML =
       `<span class="big ${cls}">${dip.toFixed(1)}%</span>` +
-      `residual ≈ <b style="color:var(--text)">${fmtAmps(residual)} V</b> at the motor — ${verdict}` +
+      `residual ≈ <b style="color:var(--text)">${fmtRound(residual)} V</b> at the motor — ${verdict}` +
       `<div class="sub">across-the-line worst case · soft-start ≈ ${dipFor(dolHi * 4.5 / 8).toFixed(1)}% · VFD ≈ ${dipFor(dolHi * 1.5 / 8).toFixed(1)}%` +
-      ` <span style="opacity:.7">(${fmtAmps(SCkVA)} kVA available, %Z ${Z})</span></div>`;
+      ` <span style="opacity:.7">(${fmtRound(SCkVA)} kVA available, %Z ${Z})</span></div>`;
   }
 
   // Persist + recompute on any motor input change.
@@ -1016,7 +1027,8 @@
       if (lastCalc.rows.length) {
         lines.push('Results:');
         lastCalc.rows.forEach(r => {
-          const val = (typeof r.value === 'number') ? formatNum(r.value, state.precision) : r.value;
+          // Match the on-screen calc rows (fixed 4 sig figs), not the converter precision.
+          const val = (typeof r.value === 'number') ? formatNum(r.value, 4) : r.value;
           lines.push('  ' + r.label + ': ' + val + (r.unit ? ' ' + r.unit : ''));
         });
       }
