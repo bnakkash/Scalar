@@ -89,7 +89,7 @@
   // so the bar stays compact. Order here defines tab + pill order.
   const CATEGORY_GROUPS = [
     { label: 'Units', keys: ['pressure','temperature','flow','massFlow','length','mass','volume','power','energy','force','speed','area','torque','density','angle','time','frequency','viscosity_d','viscosity_k'] },
-    { label: 'Mechanical', keys: ['pump','torquehp','pipe','heat'] },
+    { label: 'Mechanical', keys: ['pump','torquehp','torqueshock','pipe','heat'] },
     { label: 'Electrical', keys: ['motor','ohms','vdrop','power3','xfmrfla','xfmrsc','xfmrvr'] },
     { label: 'Instrument', keys: ['rtd','tc','rtdlead','masignal','mascale','maloop','ne43','sqrtdp','dplevel','drumlevel','lvlmap','pitot','kfactor','coriolis','caltable','zn'] },
     { label: 'Valves', keys: ['cvliq','cvgas','cvkv','vchar','vauth'] },
