@@ -284,6 +284,29 @@ window.CATEGORIES = {
     }
   },
 
+  /* Starting torque shock — base unit FLT (full-load / rated torque). Each
+     unit is a starting scenario expressed as a PEAK shaft-torque multiple of
+     rated torque, so the linear engine gives peak = value·fromF/toF
+     (e.g. 100 FLT → backspin 15×: 100·1/(1/15) = 1500). Multipliers are
+     screening figures from motor / ESP / pump practice — compare coupling &
+     shaft shock between starting methods, not a final mechanical design value.
+     Ported from the Torque Shock category added on main (single-file build). */
+  torqueshock: {
+    label: 'Torque Shock',
+    glyph: '↯',
+    base: 'FLT',
+    default: ['FLT', 'backspin'],
+    units: {
+      FLT:      { name: 'Full-load / rated torque (nameplate)',               sym: 'FLT',       f: 1 },
+      vfd:      { name: 'VFD / soft-start peak · 1.5× FLT (controlled ramp)',  sym: 'T @1.5×',   f: 1/1.5 },
+      lrt:      { name: 'Locked-rotor torque · 2× FLT (NEMA B–D)',             sym: 'LRT @2×',   f: 1/2 },
+      bdt:      { name: 'Breakdown torque · 2.5× FLT (typical)',              sym: 'BDT @2.5×', f: 1/2.5 },
+      dol:      { name: 'DOL energize · transient peak 5× FLT',               sym: 'T @5×',     f: 1/5 },
+      sc:       { name: 'Terminal short-circuit · peak 10× FLT',              sym: 'T @10×',    f: 1/10 },
+      backspin: { name: 'Backspin / out-of-phase restart · 15× FLT (worst ~180°)', sym: 'T @15×', f: 1/15 },
+    }
+  },
+
   density: {
     label: 'Density',
     glyph: 'ρ',
