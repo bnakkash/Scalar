@@ -9,6 +9,9 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#0c0d0f" />
 <meta name="format-detection" content="telephone=no" />
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Scalar — Engineering Units</title>
 
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230c0d0f'/><path d='M42 132 L90 48 L138 132 Z' fill='none' stroke='%23e8b657' stroke-width='9' stroke-linejoin='round' stroke-linecap='round'/><circle cx='90' cy='108' r='5' fill='%23e8b657'/></svg>" />
@@ -18,497 +21,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-  :root {
-    --bg: #0c0d0f;
-    --bg-grad: radial-gradient(ellipse at top, #14161a 0%, #0c0d0f 60%);
-    --surface: #141619;
-    --surface-2: #1a1d22;
-    --surface-3: #23262d;
-    --line: #2a2d34;
-    --line-soft: #1e2128;
-    --text: #eef0f2;
-    --text-dim: #9ea3ad;
-    --muted: #6b7079;
-    --accent: #e8b657;
-    --accent-dim: rgba(232, 182, 87, 0.15);
-    --accent-glow: rgba(232, 182, 87, 0.35);
-    --danger: #e06c5a;
-    --ui: 'Archivo', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
-    --radius: 14px;
-    --radius-lg: 20px;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bot: env(safe-area-inset-bottom, 0px);
-    --safe-left: env(safe-area-inset-left, 0px);
-    --safe-right: env(safe-area-inset-right, 0px);
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html, body {
-    overscroll-behavior: none;
-  }
-
-  body {
-    font-family: var(--ui);
-    background: var(--bg);
-    background-image: var(--bg-grad);
-    color: var(--text);
-    min-height: 100vh;
-    min-height: 100dvh;
-    -webkit-font-smoothing: antialiased;
-    font-feature-settings: "ss01", "cv11";
-    padding:
-      calc(var(--safe-top) + 18px)
-      calc(var(--safe-right) + 18px)
-      calc(var(--safe-bot) + 18px)
-      calc(var(--safe-left) + 18px);
-    position: relative;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      radial-gradient(circle at 20% 0%, rgba(232, 182, 87, 0.06) 0%, transparent 40%),
-      radial-gradient(circle at 80% 100%, rgba(232, 182, 87, 0.03) 0%, transparent 40%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.5;
-    mix-blend-mode: overlay;
-  }
-
-  .app {
-    max-width: 540px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ============ HEADER ============ */
-  .header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding: 4px 4px 22px;
-    border-bottom: 1px solid var(--line-soft);
-    margin-bottom: 18px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .brand-mark {
-    width: 36px;
-    height: 36px;
-    border-radius: 9px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    display: grid;
-    place-items: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .brand-mark svg {
-    width: 22px;
-    height: 22px;
-  }
-
-  .brand-text h1 {
-    font-family: var(--ui);
-    font-size: 19px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .brand-text p {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    margin-top: 4px;
-    font-weight: 500;
-  }
-
-  .precision {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .precision-label {
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  .precision-btn {
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 5px 9px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    min-width: 28px;
-  }
-
-  .precision-btn.active {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  /* ============ CATEGORY PILLS ============ */
-  .categories {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 2px 4px 12px;
-    margin: 0 -22px 20px;
-    padding-left: calc(var(--safe-left) + 22px);
-    padding-right: calc(var(--safe-right) + 22px);
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    mask-image: linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
-  }
-
-  .categories::-webkit-scrollbar { display: none; }
-
-  .cat-pill {
-    flex-shrink: 0;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    color: var(--text-dim);
-    font-family: var(--ui);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 9px 15px;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    white-space: nowrap;
-    text-transform: capitalize;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-  }
-
-  .cat-pill .dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: all 0.18s ease;
-  }
-
-  .cat-pill.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #1a1408;
-  }
-
-  .cat-pill.active .dot {
-    background: #1a1408;
-    box-shadow: 0 0 0 3px rgba(26, 20, 8, 0.15);
-  }
-
-  .cat-pill:active:not(.active) {
-    background: var(--surface-2);
-    border-color: var(--line);
-  }
-
-  /* ============ CONVERSION CARDS ============ */
-  .conversion {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    padding: 18px 20px 20px;
-    position: relative;
-    transition: border-color 0.2s ease;
-  }
-
-  .card.focused {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(232, 182, 87, 0.08);
-  }
-
-  .card-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-
-  .card-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .unit-picker {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 8px 11px 8px 13px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .unit-picker:active {
-    background: var(--surface-3);
-  }
-
-  .unit-picker .sym {
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: 0.02em;
-  }
-
-  .unit-picker .caret {
-    width: 14px;
-    height: 14px;
-    opacity: 0.5;
-  }
-
-  .unit-picker select {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    font-size: 16px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: transparent;
-    border: none;
-  }
-
-  .value-row {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    min-height: 52px;
-  }
-
-  .value-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 38px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    padding: 0;
-    width: 100%;
-    min-width: 0;
-    line-height: 1;
-  }
-
-  .value-input::placeholder {
-    color: var(--muted);
-    opacity: 0.5;
-  }
-
-  .value-display {
-    font-family: var(--mono);
-    font-size: 38px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    color: var(--text);
-    line-height: 1;
-    flex: 1;
-    overflow-wrap: anywhere;
-    word-break: break-all;
-    user-select: all;
-    -webkit-user-select: all;
-  }
-
-  .value-display.updating {
-    animation: flash 0.35s ease;
-  }
-
-  @keyframes flash {
-    0% { color: var(--accent); }
-    100% { color: var(--text); }
-  }
-
-  .unit-full {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 10px;
-    font-weight: 500;
-  }
-
-  /* ============ SWAP ============ */
-  .swap-container {
-    display: flex;
-    justify-content: center;
-    margin: -4px 0;
-    position: relative;
-    z-index: 2;
-  }
-
-  .swap-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    color: var(--text-dim);
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .swap-btn svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .swap-btn:active {
-    background: var(--accent);
-    color: #1a1408;
-    border-color: var(--accent);
-    transform: rotate(180deg) scale(0.95);
-  }
-
-  /* ============ RELATION LINE ============ */
-  .relation {
-    text-align: center;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    padding: 14px 16px;
-    background: var(--surface);
-    border: 1px dashed var(--line);
-    border-radius: 12px;
-    margin-bottom: 18px;
-    letter-spacing: 0.02em;
-    overflow-wrap: anywhere;
-  }
-
-  .relation .eq { color: var(--accent); margin: 0 4px; }
-
-  /* ============ COPY TOAST ============ */
-  .toast {
-    position: fixed;
-    left: 50%;
-    bottom: calc(var(--safe-bot) + 30px);
-    transform: translateX(-50%) translateY(20px);
-    background: var(--accent);
-    color: #1a1408;
-    font-family: var(--ui);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 10px 20px;
-    border-radius: 999px;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.25s ease;
-    z-index: 100;
-  }
-
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* ============ FOOTER ============ */
-  .footer {
-    text-align: center;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-top: 32px;
-    padding-bottom: 8px;
-    opacity: 0.6;
-  }
-
-  .footer .ornament {
-    color: var(--accent);
-    opacity: 0.7;
-  }
-
-  /* ============ MINOR DETAILS ============ */
-  @media (max-width: 380px) {
-    .value-input, .value-display { font-size: 32px; }
-    .brand-text h1 { font-size: 17px; }
-    .card { padding: 16px 16px 18px; }
-  }
-
-  /* Prevent iOS zoom on input focus */
-  .value-input { font-size: 16px; }
-  .value-input { font-size: 38px; }
-  @media (max-width: 380px) { .value-input { font-size: 32px; } }
-
-  /* Slight entry animation */
-  .card, .relation, .categories {
-    animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-  .card:nth-child(1) { animation-delay: 0.05s; }
-  .card:nth-child(3) { animation-delay: 0.1s; }
-  .relation { animation-delay: 0.15s; }
-
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-</style>
+<link rel="stylesheet" href="scalar.css?v=1.2.43">
+<link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
 <div class="app">
@@ -520,7 +34,7 @@
       </div>
       <div class="brand-text">
         <h1>Scalar</h1>
-        <p>engineering units</p>
+        <p>engineering units · <button type="button" class="version" onclick="location.reload()">v1.2.43 ↻</button></p>
       </div>
     </div>
     <div class="precision" role="group" aria-label="Precision">
@@ -531,9 +45,15 @@
     </div>
   </header>
 
+  <div class="searchbar">
+    <input id="searchInput" class="search" type="search" inputmode="search" placeholder="Search calculators…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search calculators" />
+    <button id="themeBtn" class="iconbtn" type="button" aria-label="Toggle daylight mode" title="Daylight mode">☀</button>
+    <button id="shareBtn" class="iconbtn" type="button" aria-label="Share link" title="Share link">⤴</button>
+  </div>
+  <nav class="cat-groups" id="catGroups" aria-label="Category groups"></nav>
   <nav class="categories" id="categories" aria-label="Unit categories"></nav>
 
-  <section class="conversion">
+  <section class="conversion" id="convPanel">
     <div class="card" id="fromCard">
       <div class="card-head">
         <span class="card-label">from</span>
@@ -581,735 +101,110 @@
     </div>
   </section>
 
-  <div class="relation" id="relation">—</div>
+  <div class="relation" id="relation" role="button" tabindex="0" aria-label="Swap units">—</div>
 
-  <div class="footer">
-    <span class="ornament">◆</span>&nbsp;&nbsp;scalar&nbsp;&nbsp;<span class="ornament">◆</span>
-  </div>
+  <!-- ===== MOTOR LRC / INRUSH CALCULATOR (mode: 'motor') ===== -->
+  <section class="motor" id="motorPanel" hidden>
+
+    <div class="card motor-card">
+      <div class="card-label">motor nameplate</div>
+      <div class="m-grid">
+        <label class="m-field">
+          <span>HP</span>
+          <input id="mHP" inputmode="decimal" autocomplete="off" placeholder="75" />
+        </label>
+        <label class="m-field">
+          <span>Voltage</span>
+          <input id="mV" inputmode="decimal" autocomplete="off" placeholder="460" />
+        </label>
+        <label class="m-field">
+          <span>Phase</span>
+          <span class="m-select">
+            <select id="mPhase">
+              <option value="3">3-phase</option>
+              <option value="1">1-phase</option>
+            </select>
+          </span>
+        </label>
+        <label class="m-field">
+          <span>Code letter</span>
+          <span class="m-select">
+            <select id="mCode"></select>
+          </span>
+        </label>
+        <label class="m-field">
+          <span>Efficiency %</span>
+          <input id="mEff" inputmode="decimal" autocomplete="off" placeholder="93" />
+        </label>
+        <label class="m-field">
+          <span>Power factor</span>
+          <input id="mPF" inputmode="decimal" autocomplete="off" placeholder="0.86" />
+        </label>
+      </div>
+
+      <div class="m-fla">
+        <span class="card-label">full-load amps · FLA</span>
+        <div class="value-row">
+          <input class="value-input" id="mFLA" type="text" inputmode="decimal"
+                 autocomplete="off" autocorrect="off" spellcheck="false" placeholder="80" aria-label="Full-load amps" />
+          <span class="m-fla-unit">A</span>
+        </div>
+        <div class="m-note" id="mFlaNote">Leave blank to estimate from HP, voltage, efficiency & PF.</div>
+      </div>
+    </div>
+
+    <div class="card motor-card">
+      <div class="card-label">starting inrush · locked-rotor current</div>
+      <div class="m-results" id="mResults"></div>
+    </div>
+
+    <div class="card motor-card">
+      <div class="card-label">voltage dip at start</div>
+      <div class="m-grid m-grid-2">
+        <label class="m-field">
+          <span>Transformer kVA</span>
+          <input id="mXfmr" inputmode="decimal" autocomplete="off" placeholder="500" />
+        </label>
+        <label class="m-field">
+          <span>Impedance %Z</span>
+          <input id="mZ" inputmode="decimal" autocomplete="off" placeholder="5.75" />
+        </label>
+      </div>
+      <div class="m-dip" id="mDip">—</div>
+    </div>
+
+  </section>
+
+  <!-- ===== GENERIC CALCULATOR PANEL (mode: 'calc') ===== -->
+  <section class="motor" id="calcPanel" hidden>
+    <div class="card motor-card">
+      <div class="card-label" id="calcInputsLabel">inputs</div>
+      <div class="m-models" id="calcModels" hidden></div>
+      <div class="m-grid" id="calcInputs"></div>
+    </div>
+    <div class="card motor-card" id="calcVisualCard" hidden>
+      <div class="card-label">diagram</div>
+      <div class="calc-visual" id="calcVisual"></div>
+    </div>
+    <div class="card motor-card">
+      <div class="m-result-head">
+        <span class="card-label">result</span>
+        <span class="m-result-btns">
+          <button id="calcSave" class="m-mini-btn" type="button">save</button>
+          <button id="calcExport" class="m-mini-btn" type="button">copy sheet</button>
+        </span>
+      </div>
+      <div class="m-results" id="calcResults"></div>
+      <div class="m-note" id="calcNote" hidden></div>
+      <div class="m-formula" id="calcFormula" hidden></div>
+    </div>
+  </section>
 
 </div>
 
 <div class="toast" id="toast">copied</div>
 
-<script>
-(function () {
-  'use strict';
-
-  /* ======================================================================
-     UNIT DATA
-     Each category has either:
-       - `units` with factor-to-base conversion (linear)
-       - a `convert(value, fromKey, toKey)` function for non-linear (temperature)
-     ====================================================================== */
-
-  const CATEGORIES = {
-    pressure: {
-      label: 'Pressure',
-      base: 'Pa',
-      default: ['psi', 'bar'],
-      units: {
-        Pa:       { name: 'Pascal',                     sym: 'Pa',     f: 1 },
-        kPa:      { name: 'Kilopascal',                 sym: 'kPa',    f: 1e3 },
-        MPa:      { name: 'Megapascal',                 sym: 'MPa',    f: 1e6 },
-        bar:      { name: 'Bar',                        sym: 'bar',    f: 1e5 },
-        mbar:     { name: 'Millibar',                   sym: 'mbar',   f: 100 },
-        psi:      { name: 'Pound-force per sq. inch',   sym: 'psi',    f: 6894.757293168 },
-        psig:     { name: 'psi (gauge, same scale)',    sym: 'psig',   f: 6894.757293168 },
-        atm:      { name: 'Atmosphere (standard)',      sym: 'atm',    f: 101325 },
-        inHg:     { name: 'Inch of mercury',            sym: 'inHg',   f: 3386.389 },
-        mmHg:     { name: 'Millimeter of mercury',      sym: 'mmHg',   f: 133.322387415 },
-        Torr:     { name: 'Torr',                       sym: 'Torr',   f: 133.322387415 },
-        inH2O:    { name: 'Inch of water (60°F)',       sym: 'inH₂O',  f: 248.84 },
-        ftH2O:    { name: 'Foot of water (60°F)',       sym: 'ftH₂O',  f: 2986.08 },
-        mH2O:     { name: 'Meter of water',             sym: 'mH₂O',   f: 9806.65 },
-        kgfcm2:   { name: 'Kilogram-force per cm²',     sym: 'kgf/cm²',f: 98066.5 },
-      }
-    },
-
-    temperature: {
-      label: 'Temperature',
-      default: ['C', 'F'],
-      units: {
-        C: { name: 'Celsius',    sym: '°C' },
-        F: { name: 'Fahrenheit', sym: '°F' },
-        K: { name: 'Kelvin',     sym: 'K'  },
-        R: { name: 'Rankine',    sym: '°R' },
-      },
-      convert: (v, from, to) => {
-        // to Kelvin
-        let k;
-        switch (from) {
-          case 'C': k = v + 273.15; break;
-          case 'F': k = (v - 32) * 5/9 + 273.15; break;
-          case 'K': k = v; break;
-          case 'R': k = v * 5/9; break;
-        }
-        switch (to) {
-          case 'C': return k - 273.15;
-          case 'F': return (k - 273.15) * 9/5 + 32;
-          case 'K': return k;
-          case 'R': return k * 9/5;
-        }
-      }
-    },
-
-    flow: {
-      label: 'Flow Rate',
-      base: 'm³/s',
-      default: ['gpm', 'Lpm'],
-      units: {
-        'm3s':   { name: 'Cubic meter per second', sym: 'm³/s',  f: 1 },
-        'm3h':   { name: 'Cubic meter per hour',   sym: 'm³/h',  f: 1/3600 },
-        'm3min': { name: 'Cubic meter per minute', sym: 'm³/min',f: 1/60 },
-        'Ls':    { name: 'Liter per second',       sym: 'L/s',   f: 1e-3 },
-        'Lpm':   { name: 'Liter per minute',       sym: 'L/min', f: 1e-3/60 },
-        'Lh':    { name: 'Liter per hour',         sym: 'L/h',   f: 1e-3/3600 },
-        'gpm':   { name: 'US gallon per minute',   sym: 'gpm',   f: 3.785411784e-3/60 },
-        'gph':   { name: 'US gallon per hour',     sym: 'gph',   f: 3.785411784e-3/3600 },
-        'gpmUK': { name: 'UK gallon per minute',   sym: 'gpm (UK)', f: 4.54609e-3/60 },
-        'cfm':   { name: 'Cubic foot per minute',  sym: 'cfm',   f: 0.0283168466/60 },
-        'cfh':   { name: 'Cubic foot per hour',    sym: 'cfh',   f: 0.0283168466/3600 },
-        'cfs':   { name: 'Cubic foot per second',  sym: 'cfs',   f: 0.0283168466 },
-        'bbld':  { name: 'Barrel per day (oil)',   sym: 'bbl/d', f: 0.158987294928/86400 },
-        'bblh':  { name: 'Barrel per hour (oil)',  sym: 'bbl/h', f: 0.158987294928/3600 },
-      }
-    },
-
-    length: {
-      label: 'Length',
-      base: 'm',
-      default: ['in', 'mm'],
-      units: {
-        m:   { name: 'Meter',       sym: 'm',   f: 1 },
-        cm:  { name: 'Centimeter',  sym: 'cm',  f: 0.01 },
-        mm:  { name: 'Millimeter',  sym: 'mm',  f: 0.001 },
-        um:  { name: 'Micrometer',  sym: 'µm',  f: 1e-6 },
-        nm:  { name: 'Nanometer',   sym: 'nm',  f: 1e-9 },
-        km:  { name: 'Kilometer',   sym: 'km',  f: 1000 },
-        inch:{ name: 'Inch',        sym: 'in',  f: 0.0254 },
-        ft:  { name: 'Foot',        sym: 'ft',  f: 0.3048 },
-        yd:  { name: 'Yard',        sym: 'yd',  f: 0.9144 },
-        mi:  { name: 'Mile',        sym: 'mi',  f: 1609.344 },
-        mil: { name: 'Mil (thou)',  sym: 'mil', f: 2.54e-5 },
-        nmi: { name: 'Nautical mile', sym: 'nmi', f: 1852 },
-      }
-    },
-
-    mass: {
-      label: 'Mass',
-      base: 'kg',
-      default: ['lb', 'kg'],
-      units: {
-        kg:    { name: 'Kilogram',         sym: 'kg',  f: 1 },
-        g:     { name: 'Gram',             sym: 'g',   f: 1e-3 },
-        mg:    { name: 'Milligram',        sym: 'mg',  f: 1e-6 },
-        tonne: { name: 'Metric ton',       sym: 't',   f: 1000 },
-        lb:    { name: 'Pound',            sym: 'lb',  f: 0.45359237 },
-        oz:    { name: 'Ounce',            sym: 'oz',  f: 0.028349523125 },
-        stS:   { name: 'Short ton (US)',   sym: 'ton (US)', f: 907.18474 },
-        stL:   { name: 'Long ton (UK)',    sym: 'ton (UK)', f: 1016.0469088 },
-        stone: { name: 'Stone',            sym: 'st',  f: 6.35029318 },
-        slug:  { name: 'Slug',             sym: 'slug',f: 14.593902937 },
-      }
-    },
-
-    volume: {
-      label: 'Volume',
-      base: 'm³',
-      default: ['gal', 'L'],
-      units: {
-        m3:    { name: 'Cubic meter',       sym: 'm³',    f: 1 },
-        L:     { name: 'Liter',             sym: 'L',     f: 1e-3 },
-        mL:    { name: 'Milliliter',        sym: 'mL',    f: 1e-6 },
-        cm3:   { name: 'Cubic centimeter',  sym: 'cm³',   f: 1e-6 },
-        in3:   { name: 'Cubic inch',        sym: 'in³',   f: 1.6387064e-5 },
-        ft3:   { name: 'Cubic foot',        sym: 'ft³',   f: 0.028316846592 },
-        yd3:   { name: 'Cubic yard',        sym: 'yd³',   f: 0.764554857984 },
-        gal:   { name: 'US gallon',         sym: 'gal',   f: 0.003785411784 },
-        galUK: { name: 'UK gallon',         sym: 'gal (UK)', f: 0.00454609 },
-        qt:    { name: 'US quart',          sym: 'qt',    f: 0.000946352946 },
-        pt:    { name: 'US pint',           sym: 'pt',    f: 0.000473176473 },
-        floz:  { name: 'US fluid ounce',    sym: 'fl oz', f: 2.95735295625e-5 },
-        bbl:   { name: 'Oil barrel',        sym: 'bbl',   f: 0.158987294928 },
-      }
-    },
-
-    power: {
-      label: 'Power',
-      base: 'W',
-      default: ['HP', 'kW'],
-      units: {
-        W:    { name: 'Watt',                sym: 'W',     f: 1 },
-        kW:   { name: 'Kilowatt',            sym: 'kW',    f: 1000 },
-        MW:   { name: 'Megawatt',            sym: 'MW',    f: 1e6 },
-        mW:   { name: 'Milliwatt',           sym: 'mW',    f: 1e-3 },
-        HP:   { name: 'Horsepower (mech)',   sym: 'HP',    f: 745.699871582 },
-        HPm:  { name: 'Horsepower (metric)', sym: 'HP (m)',f: 735.49875 },
-        btuh: { name: 'BTU per hour',        sym: 'BTU/h', f: 0.29307107 },
-        btus: { name: 'BTU per second',      sym: 'BTU/s', f: 1055.05585262 },
-        kcalh:{ name: 'Kilocalorie per hour',sym: 'kcal/h',f: 1.163 },
-        tr:   { name: 'Ton of refrigeration',sym: 'TR',    f: 3516.8528421 },
-        ftlbs:{ name: 'Foot-pound per second', sym: 'ft·lbf/s', f: 1.35581794833 },
-      }
-    },
-
-    energy: {
-      label: 'Energy',
-      base: 'J',
-      default: ['kWh', 'BTU'],
-      units: {
-        J:    { name: 'Joule',           sym: 'J',     f: 1 },
-        kJ:   { name: 'Kilojoule',       sym: 'kJ',    f: 1000 },
-        MJ:   { name: 'Megajoule',       sym: 'MJ',    f: 1e6 },
-        Wh:   { name: 'Watt-hour',       sym: 'Wh',    f: 3600 },
-        kWh:  { name: 'Kilowatt-hour',   sym: 'kWh',   f: 3.6e6 },
-        MWh:  { name: 'Megawatt-hour',   sym: 'MWh',   f: 3.6e9 },
-        BTU:  { name: 'British thermal unit', sym: 'BTU', f: 1055.05585262 },
-        kBTU: { name: 'Thousand BTU',    sym: 'kBTU',  f: 1055055.85262 },
-        therm:{ name: 'Therm (US)',      sym: 'therm', f: 1.054804e8 },
-        cal:  { name: 'Calorie',         sym: 'cal',   f: 4.184 },
-        kcal: { name: 'Kilocalorie',     sym: 'kcal',  f: 4184 },
-        ftlbf:{ name: 'Foot-pound',      sym: 'ft·lbf',f: 1.35581794833 },
-        eV:   { name: 'Electronvolt',    sym: 'eV',    f: 1.602176634e-19 },
-      }
-    },
-
-    force: {
-      label: 'Force',
-      base: 'N',
-      default: ['lbf', 'N'],
-      units: {
-        N:    { name: 'Newton',      sym: 'N',    f: 1 },
-        kN:   { name: 'Kilonewton',  sym: 'kN',   f: 1000 },
-        MN:   { name: 'Meganewton',  sym: 'MN',   f: 1e6 },
-        lbf:  { name: 'Pound-force', sym: 'lbf',  f: 4.4482216152605 },
-        kgf:  { name: 'Kilogram-force', sym: 'kgf', f: 9.80665 },
-        gf:   { name: 'Gram-force',  sym: 'gf',   f: 9.80665e-3 },
-        ozf:  { name: 'Ounce-force', sym: 'ozf',  f: 0.2780138509537812 },
-        dyne: { name: 'Dyne',        sym: 'dyn',  f: 1e-5 },
-        kip:  { name: 'Kip',         sym: 'kip',  f: 4448.2216152605 },
-      }
-    },
-
-    speed: {
-      label: 'Speed',
-      base: 'm/s',
-      default: ['mph', 'ft/s'],
-      units: {
-        ms:    { name: 'Meter per second',   sym: 'm/s',    f: 1 },
-        kmh:   { name: 'Kilometer per hour', sym: 'km/h',   f: 1/3.6 },
-        fts:   { name: 'Foot per second',    sym: 'ft/s',   f: 0.3048 },
-        ftm:   { name: 'Foot per minute',    sym: 'ft/min', f: 0.3048/60 },
-        mph:   { name: 'Mile per hour',      sym: 'mph',    f: 0.44704 },
-        knot:  { name: 'Knot',               sym: 'kn',     f: 0.514444444 },
-        ips:   { name: 'Inch per second',    sym: 'in/s',   f: 0.0254 },
-      }
-    },
-
-    area: {
-      label: 'Area',
-      base: 'm²',
-      default: ['ft²', 'm²'],
-      units: {
-        m2:  { name: 'Square meter',      sym: 'm²',  f: 1 },
-        cm2: { name: 'Square centimeter', sym: 'cm²', f: 1e-4 },
-        mm2: { name: 'Square millimeter', sym: 'mm²', f: 1e-6 },
-        km2: { name: 'Square kilometer',  sym: 'km²', f: 1e6 },
-        in2: { name: 'Square inch',       sym: 'in²', f: 6.4516e-4 },
-        ft2: { name: 'Square foot',       sym: 'ft²', f: 0.09290304 },
-        yd2: { name: 'Square yard',       sym: 'yd²', f: 0.83612736 },
-        mi2: { name: 'Square mile',       sym: 'mi²', f: 2589988.110336 },
-        ac:  { name: 'Acre',              sym: 'ac',  f: 4046.8564224 },
-        ha:  { name: 'Hectare',           sym: 'ha',  f: 10000 },
-      }
-    },
-
-    torque: {
-      label: 'Torque',
-      base: 'N·m',
-      default: ['lbf·ft', 'N·m'],
-      units: {
-        Nm:    { name: 'Newton-meter',         sym: 'N·m',    f: 1 },
-        kNm:   { name: 'Kilonewton-meter',     sym: 'kN·m',   f: 1000 },
-        lbft:  { name: 'Pound-force foot',     sym: 'lbf·ft', f: 1.3558179483314 },
-        lbin:  { name: 'Pound-force inch',     sym: 'lbf·in', f: 0.1129848290276 },
-        kgfm:  { name: 'Kilogram-force meter', sym: 'kgf·m',  f: 9.80665 },
-        ozin:  { name: 'Ounce-force inch',     sym: 'ozf·in', f: 0.00706155181439 },
-        dyncm: { name: 'Dyne-centimeter',      sym: 'dyn·cm', f: 1e-7 },
-      }
-    },
-
-    density: {
-      label: 'Density',
-      base: 'kg/m³',
-      default: ['lb/ft³', 'kg/m³'],
-      units: {
-        kgm3:  { name: 'Kilogram per cubic meter', sym: 'kg/m³',  f: 1 },
-        gcm3:  { name: 'Gram per cubic centimeter',sym: 'g/cm³',  f: 1000 },
-        gL:    { name: 'Gram per liter',           sym: 'g/L',    f: 1 },
-        lbft3: { name: 'Pound per cubic foot',     sym: 'lb/ft³', f: 16.01846337396 },
-        lbin3: { name: 'Pound per cubic inch',     sym: 'lb/in³', f: 27679.90471020312 },
-        lbgal: { name: 'Pound per US gallon',      sym: 'lb/gal', f: 119.8264273 },
-        ozin3: { name: 'Ounce per cubic inch',     sym: 'oz/in³', f: 1729.994046875 },
-        sg:    { name: 'Specific gravity (water @ 4°C)', sym: 'SG', f: 1000 },
-      }
-    },
-
-    angle: {
-      label: 'Angle',
-      base: 'rad',
-      default: ['deg', 'rad'],
-      units: {
-        deg:  { name: 'Degree',    sym: '°',    f: Math.PI / 180 },
-        rad:  { name: 'Radian',    sym: 'rad',  f: 1 },
-        grad: { name: 'Gradian',   sym: 'grad', f: Math.PI / 200 },
-        turn: { name: 'Turn',      sym: 'turn', f: 2 * Math.PI },
-        amin: { name: 'Arcminute', sym: 'arcmin', f: Math.PI / 10800 },
-        asec: { name: 'Arcsecond', sym: 'arcsec', f: Math.PI / 648000 },
-        mil:  { name: 'NATO Mil',  sym: 'mil',  f: Math.PI / 3200 },
-      }
-    },
-
-    time: {
-      label: 'Time',
-      base: 's',
-      default: ['min', 's'],
-      units: {
-        ms:  { name: 'Millisecond', sym: 'ms',  f: 1e-3 },
-        us:  { name: 'Microsecond', sym: 'µs',  f: 1e-6 },
-        s:   { name: 'Second',      sym: 's',   f: 1 },
-        min: { name: 'Minute',      sym: 'min', f: 60 },
-        h:   { name: 'Hour',        sym: 'h',   f: 3600 },
-        d:   { name: 'Day',         sym: 'd',   f: 86400 },
-        wk:  { name: 'Week',        sym: 'wk',  f: 604800 },
-        yr:  { name: 'Year (365d)', sym: 'yr',  f: 31536000 },
-      }
-    },
-
-    frequency: {
-      label: 'Frequency',
-      base: 'Hz',
-      default: ['Hz', 'rpm'],
-      units: {
-        Hz:  { name: 'Hertz',      sym: 'Hz',  f: 1 },
-        kHz: { name: 'Kilohertz',  sym: 'kHz', f: 1000 },
-        MHz: { name: 'Megahertz',  sym: 'MHz', f: 1e6 },
-        GHz: { name: 'Gigahertz',  sym: 'GHz', f: 1e9 },
-        rpm: { name: 'Rev/min',    sym: 'rpm', f: 1/60 },
-        rads:{ name: 'Radian/sec', sym: 'rad/s', f: 1/(2*Math.PI) },
-      }
-    },
-
-    viscosity_d: {
-      label: 'Viscosity (dyn.)',
-      base: 'Pa·s',
-      default: ['cP', 'Pa·s'],
-      units: {
-        Pas:   { name: 'Pascal-second',     sym: 'Pa·s',  f: 1 },
-        mPas:  { name: 'Millipascal-second',sym: 'mPa·s', f: 1e-3 },
-        cP:    { name: 'Centipoise',        sym: 'cP',    f: 1e-3 },
-        P:     { name: 'Poise',             sym: 'P',     f: 0.1 },
-        lbfsft2:{ name: 'lbf·s/ft²',        sym: 'lbf·s/ft²', f: 47.8802589803 },
-      }
-    },
-
-    viscosity_k: {
-      label: 'Viscosity (kin.)',
-      base: 'm²/s',
-      default: ['cSt', 'm²/s'],
-      units: {
-        m2s:  { name: 'Square meter/sec',  sym: 'm²/s',  f: 1 },
-        mm2s: { name: 'Square mm/sec',     sym: 'mm²/s', f: 1e-6 },
-        cSt:  { name: 'Centistokes',       sym: 'cSt',   f: 1e-6 },
-        St:   { name: 'Stokes',            sym: 'St',    f: 1e-4 },
-        ft2s: { name: 'Square foot/sec',   sym: 'ft²/s', f: 0.09290304 },
-      }
-    },
-
-    /* ------------------------------------------------------------------
-       Motor inrush / Locked-Rotor Current (LRC).
-       Base unit is FLA (full-load amps). Each starting method is a unit
-       whose factor is 1/multiplier, so the linear engine gives:
-         inrush = value * fromF / toF
-       e.g. 80 FLA -> "8× A":  80 * 1 / (1/8) = 640 A.
-       Fully reversible, so swap + relation line work unchanged.
-       ------------------------------------------------------------------ */
-    motor: {
-      label: 'Motor LRC',
-      base: 'FLA',
-      default: ['FLA', 'dol7'],
-      units: {
-        FLA:    { name: 'Full-load amps (nameplate)',        sym: 'FLA',     f: 1 },
-        dol6:   { name: 'DOL inrush · 6× FLA (NEMA min)',    sym: 'A @6×',   f: 1/6 },
-        dol7:   { name: 'DOL inrush · 7× FLA (typical)',     sym: 'A @7×',   f: 1/7 },
-        dol8:   { name: 'DOL inrush · 8× FLA (NEMA max)',    sym: 'A @8×',   f: 1/8 },
-        prem10: { name: 'Premium-eff. inrush · 10× FLA',     sym: 'A @10×',  f: 1/10 },
-        prem12: { name: 'Premium-eff. inrush · 12× FLA',     sym: 'A @12×',  f: 1/12 },
-        soft3:  { name: 'Soft starter · 3× FLA (low)',       sym: 'A @3×',   f: 1/3 },
-        soft45: { name: 'Soft starter · 4.5× FLA (high)',    sym: 'A @4.5×', f: 1/4.5 },
-        vfd1:   { name: 'VFD · 1× FLA (best case)',          sym: 'A @1×',   f: 1 },
-        vfd15:  { name: 'VFD · 1.5× FLA (typical)',          sym: 'A @1.5×', f: 1/1.5 },
-      }
-    },
-
-    /* ------------------------------------------------------------------
-       Starting torque shock.
-       Base unit is FLT (full-load / rated torque). Each row is a starting
-       scenario expressed as a PEAK shaft-torque multiple of rated torque,
-       so the linear engine gives:
-         peak torque = value * fromF / toF
-       e.g. 100 FLT -> "backspin 15×": 100 * 1 / (1/15) = 1500 (15× rated).
-       Multipliers are screening figures from motor / ESP / pump practice,
-       not exact constants — use to compare coupling & shaft shock between
-       starting methods, not as a final mechanical design value.
-       Fully reversible, so swap + relation line work unchanged.
-       ------------------------------------------------------------------ */
-    torqueshock: {
-      label: 'Torque Shock',
-      base: 'FLT',
-      default: ['FLT', 'backspin'],
-      units: {
-        FLT:      { name: 'Full-load / rated torque (nameplate)',          sym: 'FLT',     f: 1 },
-        vfd:      { name: 'VFD / soft-start peak · 1.5× FLT (controlled ramp)', sym: 'T @1.5×', f: 1/1.5 },
-        lrt:      { name: 'Locked-rotor torque · 2× FLT (NEMA B–D)',        sym: 'LRT @2×', f: 1/2 },
-        bdt:      { name: 'Breakdown torque · 2.5× FLT (typical)',          sym: 'BDT @2.5×', f: 1/2.5 },
-        dol:      { name: 'DOL energize · transient peak 5× FLT',           sym: 'T @5×',   f: 1/5 },
-        sc:       { name: 'Terminal short-circuit · peak 10× FLT',          sym: 'T @10×',  f: 1/10 },
-        backspin: { name: 'Backspin / out-of-phase restart · 15× FLT (worst ~180°)', sym: 'T @15×', f: 1/15 },
-      }
-    },
-  };
-
-  /* ======================================================================
-     STATE
-     ====================================================================== */
-
-  const STORAGE_KEY = 'scalar_state_v1';
-
-  const state = {
-    category: 'pressure',
-    fromUnit: 'psi',
-    toUnit: 'bar',
-    fromValue: '1',
-    precision: 6,
-    perCategory: {}, // remembers unit pairs per category
-  };
-
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) Object.assign(state, JSON.parse(raw));
-    } catch (_) {}
-  }
-
-  function saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (_) {}
-  }
-
-  /* ======================================================================
-     ELEMENTS
-     ====================================================================== */
-
-  const el = {
-    categories: document.getElementById('categories'),
-    fromUnit: document.getElementById('fromUnit'),
-    toUnit: document.getElementById('toUnit'),
-    fromSym: document.getElementById('fromSym'),
-    toSym: document.getElementById('toSym'),
-    fromName: document.getElementById('fromName'),
-    toName: document.getElementById('toName'),
-    fromValue: document.getElementById('fromValue'),
-    toValue: document.getElementById('toValue'),
-    fromCard: document.getElementById('fromCard'),
-    toCard: document.getElementById('toCard'),
-    swapBtn: document.getElementById('swapBtn'),
-    relation: document.getElementById('relation'),
-    toast: document.getElementById('toast'),
-  };
-
-  /* ======================================================================
-     RENDER
-     ====================================================================== */
-
-  function renderCategories() {
-    el.categories.innerHTML = '';
-    Object.entries(CATEGORIES).forEach(([key, cat]) => {
-      const b = document.createElement('button');
-      b.className = 'cat-pill' + (key === state.category ? ' active' : '');
-      b.innerHTML = `<span class="dot"></span>${cat.label}`;
-      b.addEventListener('click', () => selectCategory(key));
-      el.categories.appendChild(b);
-    });
-    // scroll active into view
-    requestAnimationFrame(() => {
-      const active = el.categories.querySelector('.cat-pill.active');
-      if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    });
-  }
-
-  function renderUnits() {
-    const cat = CATEGORIES[state.category];
-    const units = cat.units;
-    [el.fromUnit, el.toUnit].forEach(sel => {
-      sel.innerHTML = '';
-      Object.entries(units).forEach(([key, u]) => {
-        const o = document.createElement('option');
-        o.value = key;
-        o.textContent = `${u.sym} — ${u.name}`;
-        sel.appendChild(o);
-      });
-    });
-
-    // restore or default
-    const remembered = state.perCategory[state.category];
-    if (remembered && units[remembered.from] && units[remembered.to]) {
-      state.fromUnit = remembered.from;
-      state.toUnit = remembered.to;
-    } else {
-      const d = cat.default || Object.keys(units).slice(0, 2);
-      state.fromUnit = units[d[0]] ? d[0] : Object.keys(units)[0];
-      state.toUnit = units[d[1]] ? d[1] : Object.keys(units)[1] || state.fromUnit;
-    }
-
-    el.fromUnit.value = state.fromUnit;
-    el.toUnit.value = state.toUnit;
-    updateLabels();
-  }
-
-  function updateLabels() {
-    const cat = CATEGORIES[state.category];
-    const fu = cat.units[state.fromUnit];
-    const tu = cat.units[state.toUnit];
-    el.fromSym.textContent = fu.sym;
-    el.toSym.textContent = tu.sym;
-    el.fromName.textContent = fu.name;
-    el.toName.textContent = tu.name;
-  }
-
-  /* ======================================================================
-     CONVERSION
-     ====================================================================== */
-
-  function convert(value, fromKey, toKey) {
-    const cat = CATEGORIES[state.category];
-    if (cat.convert) return cat.convert(value, fromKey, toKey);
-    const fromF = cat.units[fromKey].f;
-    const toF   = cat.units[toKey].f;
-    // value * fromF = base; base / toF = target
-    return value * fromF / toF;
-  }
-
-  function formatNum(n, prec) {
-    if (!isFinite(n)) return '—';
-    if (n === 0) return '0';
-    const abs = Math.abs(n);
-    let s;
-    if (abs >= 1e8 || abs < 1e-4) {
-      s = n.toExponential(prec - 1);
-      // prettify: 1.234e+5 -> 1.234×10⁵ ? keep ascii for now, use e notation
-      return s.replace('e+', 'e').replace(/e(-?)0*(\d)/, 'e$1$2');
-    }
-    s = n.toPrecision(prec);
-    if (s.includes('.') && !s.includes('e')) {
-      s = s.replace(/0+$/, '').replace(/\.$/, '');
-    }
-    // add thousands separators to integer part (only for small whole/non-exp)
-    if (!s.includes('e')) {
-      const parts = s.split('.');
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      s = parts.join('.');
-    }
-    return s;
-  }
-
-  function recompute(animate = true) {
-    const raw = el.fromValue.value.trim().replace(/,/g, '');
-    if (raw === '' || raw === '-' || raw === '.') {
-      el.toValue.textContent = '—';
-      el.relation.textContent = '—';
-      return;
-    }
-    const v = parseFloat(raw);
-    if (!isFinite(v)) {
-      el.toValue.textContent = '—';
-      el.relation.textContent = '—';
-      return;
-    }
-    const out = convert(v, state.fromUnit, state.toUnit);
-    el.toValue.textContent = formatNum(out, state.precision);
-
-    // relation line: 1 from_sym ≈ X to_sym
-    const oneOut = convert(1, state.fromUnit, state.toUnit);
-    const cat = CATEGORIES[state.category];
-    const fu = cat.units[state.fromUnit];
-    const tu = cat.units[state.toUnit];
-    el.relation.innerHTML =
-      `1 ${fu.sym} <span class="eq">=</span> ${formatNum(oneOut, 6)} ${tu.sym}`;
-
-    if (animate) {
-      el.toValue.classList.remove('updating');
-      // force reflow to restart animation
-      void el.toValue.offsetWidth;
-      el.toValue.classList.add('updating');
-    }
-  }
-
-  /* ======================================================================
-     EVENT HANDLERS
-     ====================================================================== */
-
-  function selectCategory(key) {
-    if (key === state.category) return;
-    // remember current pair
-    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
-    state.category = key;
-    renderCategories();
-    renderUnits();
-    recompute();
-    saveState();
-    haptic(8);
-  }
-
-  el.fromUnit.addEventListener('change', (e) => {
-    state.fromUnit = e.target.value;
-    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
-    updateLabels();
-    recompute();
-    saveState();
-  });
-
-  el.toUnit.addEventListener('change', (e) => {
-    state.toUnit = e.target.value;
-    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
-    updateLabels();
-    recompute();
-    saveState();
-  });
-
-  el.fromValue.addEventListener('input', (e) => {
-    // allow digits, decimal, minus, exponent, comma
-    let v = e.target.value;
-    // Keep user string as-is (don't fight their typing); only strip invalid chars at conversion time.
-    // But lightly clean: remove spaces
-    v = v.replace(/\s/g, '');
-    if (v !== e.target.value) e.target.value = v;
-    state.fromValue = v;
-    recompute();
-    saveState();
-  });
-
-  el.fromValue.addEventListener('focus', () => {
-    el.fromCard.classList.add('focused');
-    // select all for quick overwrite
-    setTimeout(() => el.fromValue.select(), 20);
-  });
-
-  el.fromValue.addEventListener('blur', () => {
-    el.fromCard.classList.remove('focused');
-  });
-
-  el.swapBtn.addEventListener('click', () => {
-    const cat = CATEGORIES[state.category];
-    // Swap units, and also swap the values so the displayed numbers "swap".
-    // We compute the current "to" value and put it in the from input.
-    const currentOut = el.toValue.textContent.replace(/,/g, '');
-    const parsedOut = parseFloat(currentOut);
-
-    const oldFrom = state.fromUnit;
-    state.fromUnit = state.toUnit;
-    state.toUnit = oldFrom;
-    state.perCategory[state.category] = { from: state.fromUnit, to: state.toUnit };
-
-    el.fromUnit.value = state.fromUnit;
-    el.toUnit.value = state.toUnit;
-    updateLabels();
-
-    if (isFinite(parsedOut)) {
-      el.fromValue.value = formatNum(parsedOut, state.precision).replace(/,/g, '');
-      state.fromValue = el.fromValue.value;
-    }
-    recompute();
-    saveState();
-    haptic(10);
-  });
-
-  // precision buttons
-  document.querySelectorAll('.precision-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.precision-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.precision = parseInt(btn.dataset.prec, 10);
-      recompute(false);
-      saveState();
-    });
-  });
-
-  // tap to copy result
-  el.toValue.addEventListener('click', async () => {
-    const t = el.toValue.textContent;
-    if (t === '—') return;
-    const plain = t.replace(/,/g, '');
-    try {
-      await navigator.clipboard.writeText(plain);
-      toast('copied ' + plain);
-      haptic(12);
-    } catch (_) {
-      // fallback
-      const r = document.createRange();
-      r.selectNode(el.toValue);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(r);
-      try {
-        document.execCommand('copy');
-        toast('copied');
-      } catch (_) {}
-      window.getSelection().removeAllRanges();
-    }
-  });
-
-  function toast(msg) {
-    el.toast.textContent = msg;
-    el.toast.classList.add('show');
-    clearTimeout(toast._t);
-    toast._t = setTimeout(() => el.toast.classList.remove('show'), 1400);
-  }
-
-  function haptic(ms) {
-    if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (_) {} }
-  }
-
-  // Prevent double-tap zoom
-  let lastTap = 0;
-  document.addEventListener('touchend', (e) => {
-    const now = Date.now();
-    if (now - lastTap < 300 && e.target.tagName !== 'INPUT') {
-      e.preventDefault();
-    }
-    lastTap = now;
-  }, { passive: false });
-
-  /* ======================================================================
-     INIT
-     ====================================================================== */
-
-  function init() {
-    loadState();
-    // validate category
-    if (!CATEGORIES[state.category]) state.category = 'pressure';
-    // sync precision UI
-    document.querySelectorAll('.precision-btn').forEach(b => {
-      b.classList.toggle('active', parseInt(b.dataset.prec, 10) === state.precision);
-    });
-    renderCategories();
-    renderUnits();
-    el.fromValue.value = state.fromValue || '1';
-    recompute(false);
-  }
-
-  init();
-})();
-</script>
+<script src="categories.js?v=1.2.43"></script>
+<script src="app.js?v=1.2.43"></script>
 </body>
 </html>
